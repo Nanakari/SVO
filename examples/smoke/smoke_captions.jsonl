@@ -1,0 +1,1 @@
+{"sample_id":"smoke-1","image_id":"1","image_path":"examples/smoke/images/smoke.jpg","dataset":"coco_chair","method":"base","caption":"A person with a laptop and a bottle.","token_scores":[{"token":"person","logprob":-0.1},{"token":"laptop","logprob":-0.2},{"token":"bottle","logprob":-1.4}],"latency_sec":1.0}

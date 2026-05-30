@@ -1,0 +1,9 @@
+name: verify_all
+description: "Verify every extracted object with the same detector and conservative revision rules."
+pipeline:
+  generate_caption: true
+  extract_objects: true
+  score_risk: false
+  verify_objects: true
+  verify_policy: all
+  revise_text: true

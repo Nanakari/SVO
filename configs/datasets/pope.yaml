@@ -1,0 +1,26 @@
+name: pope
+task: object_existence_qa
+
+paths:
+  image_root: data/coco/val2014
+  annotation_files:
+    random: data/pope/random.jsonl
+    popular: data/pope/popular.jsonl
+    adversarial: data/pope/adversarial.jsonl
+
+inference:
+  answer_format: yes_no
+  revise_yes_to_no_only: true
+  prompt_template: "{question}\nAnswer the question using only Yes or No."
+
+evaluation:
+  settings:
+    - random
+    - popular
+    - adversarial
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - yes_ratio

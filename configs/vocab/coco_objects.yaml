@@ -1,0 +1,119 @@
+categories:
+  - person
+  - bicycle
+  - car
+  - motorcycle
+  - airplane
+  - bus
+  - train
+  - truck
+  - boat
+  - traffic light
+  - fire hydrant
+  - stop sign
+  - parking meter
+  - bench
+  - bird
+  - cat
+  - dog
+  - horse
+  - sheep
+  - cow
+  - elephant
+  - bear
+  - zebra
+  - giraffe
+  - backpack
+  - umbrella
+  - handbag
+  - tie
+  - suitcase
+  - frisbee
+  - skis
+  - snowboard
+  - sports ball
+  - kite
+  - baseball bat
+  - baseball glove
+  - skateboard
+  - surfboard
+  - tennis racket
+  - bottle
+  - wine glass
+  - cup
+  - fork
+  - knife
+  - spoon
+  - bowl
+  - banana
+  - apple
+  - sandwich
+  - orange
+  - broccoli
+  - carrot
+  - hot dog
+  - pizza
+  - donut
+  - cake
+  - chair
+  - couch
+  - potted plant
+  - bed
+  - dining table
+  - toilet
+  - tv
+  - laptop
+  - mouse
+  - remote
+  - keyboard
+  - cell phone
+  - microwave
+  - oven
+  - toaster
+  - sink
+  - refrigerator
+  - book
+  - clock
+  - vase
+  - scissors
+  - teddy bear
+  - hair drier
+  - toothbrush
+
+synonyms:
+  man: person
+  woman: person
+  boy: person
+  girl: person
+  child: person
+  people: person
+  bike: bicycle
+  motorbike: motorcycle
+  plane: airplane
+  aeroplane: airplane
+  sofa: couch
+  tv monitor: tv
+  television: tv
+  cellphone: cell phone
+  mobile phone: cell phone
+  dining table: dining table
+  table: dining table
+  plant: potted plant
+  traffic signal: traffic light
+  ball: sports ball
+
+filters:
+  - scene
+  - view
+  - image
+  - photo
+  - picture
+  - background
+  - foreground
+  - area
+  - atmosphere
+  - setting
+  - environment
+  - object
+  - thing
+  - item

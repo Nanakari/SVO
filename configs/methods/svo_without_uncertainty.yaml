@@ -1,0 +1,8 @@
+name: svo_without_uncertainty
+display_name: "w/o Uncertainty"
+description: "SVO risk scoring ablation without generation uncertainty."
+base_method: svo
+risk_terms:
+  uncertainty: false
+  position: true
+  prior: true

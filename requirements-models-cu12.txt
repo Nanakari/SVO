@@ -1,0 +1,9 @@
+# CUDA 12 model stack. Install this inside the SVO environment on an NVIDIA host.
+# PyTorch wheels are resolved from the CUDA 12.1 index when available.
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch>=2.3.0
+torchvision>=0.18.0
+accelerate>=0.27.0
+opencv-python>=4.8.0
+sentencepiece>=0.1.99
+transformers>=4.37.0

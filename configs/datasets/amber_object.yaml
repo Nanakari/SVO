@@ -1,0 +1,20 @@
+name: amber_object
+task: object_existence_subset
+
+paths:
+  image_root: data/amber/images
+  annotation_file: data/amber/object_subset.jsonl
+
+filter:
+  include_object_existence_only: true
+  exclude_attributes: true
+  exclude_relations: true
+  exclude_ocr: true
+
+evaluation:
+  metrics:
+    - amber_object_score
+    - accuracy
+    - precision
+    - recall
+    - f1

@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this repository, cite the original SVO method/paper when available and cite this code repository."
+title: "paper_reproduce: Selective Verification of Objects Reproduction Code"
+version: 0.1.0
+date-released: 2026-05-30
+license: MIT
+authors:
+  - name: "paper_reproduce contributors"
+keywords:
+  - hallucination
+  - vision-language-models
+  - object-verification
+  - llava
+  - groundingdino

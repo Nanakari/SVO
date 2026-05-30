@@ -1,0 +1,13 @@
+name: svo
+description: "Selective verification of high-risk objects."
+pipeline:
+  generate_caption: true
+  extract_objects: true
+  score_risk: true
+  verify_objects: true
+  verify_policy: risk_threshold
+  revise_text: true
+risk_terms:
+  uncertainty: true
+  position: true
+  prior: true

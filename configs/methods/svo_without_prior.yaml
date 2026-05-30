@@ -1,0 +1,8 @@
+name: svo_without_prior
+display_name: "w/o Prior"
+description: "SVO risk scoring ablation without static hallucination prior."
+base_method: svo
+risk_terms:
+  uncertainty: true
+  position: true
+  prior: false

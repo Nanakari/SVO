@@ -1,0 +1,8 @@
+name: base
+description: "LLaVA-1.5-7B output without hallucination mitigation."
+pipeline:
+  generate_caption: true
+  extract_objects: false
+  score_risk: false
+  verify_objects: false
+  revise_text: false

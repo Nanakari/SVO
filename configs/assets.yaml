@@ -1,0 +1,31 @@
+assets:
+  llava:
+    model_id: llava-hf/llava-1.5-7b-hf
+    local_dir: models/llava-1.5-7b-hf
+    required_for:
+      - run_caption.py
+      - run_pope.py
+
+  groundingdino:
+    repo_url: https://github.com/IDEA-Research/GroundingDINO.git
+    repo_dir: models/GroundingDINO
+    config_path: models/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py
+    checkpoint_path: models/groundingdino_swint_ogc.pth
+    checkpoint_url: https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
+    required_for:
+      - verify_objects.py
+
+datasets:
+  coco_chair:
+    image_root: data/coco/val2014
+    annotation_file: data/coco/annotations/instances_val2014.json
+    validation_image_root: data/coco/train2017
+    validation_annotation_file: data/coco/annotations/instances_train2017.json
+  pope:
+    image_root: data/coco/val2014
+    random: data/pope/random.jsonl
+    popular: data/pope/popular.jsonl
+    adversarial: data/pope/adversarial.jsonl
+  amber_object:
+    image_root: data/amber/images
+    annotation_file: data/amber/object_subset.jsonl

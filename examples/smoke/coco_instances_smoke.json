@@ -1,0 +1,42 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "file_name": "smoke.jpg"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "person"
+    },
+    {
+      "id": 2,
+      "name": "laptop"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 2,
+      "bbox": [
+        10,
+        10,
+        20,
+        20
+      ]
+    }
+  ]
+}

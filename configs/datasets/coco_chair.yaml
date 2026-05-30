@@ -1,0 +1,23 @@
+name: coco_chair
+task: caption_hallucination
+
+paths:
+  image_root: data/coco/val2014
+  annotation_file: data/coco/annotations/instances_val2014.json
+  captions_file: null
+
+validation:
+  image_root: data/coco/train2017
+  annotation_file: data/coco/annotations/instances_train2017.json
+  sample_size: 500
+  seed: 42
+
+evaluation:
+  metrics:
+    - chairs
+    - chairi
+    - average_length
+    - correct_object_coverage
+    - hallucinated_object_removal
+    - correct_object_retention
+    - false_correction_rate

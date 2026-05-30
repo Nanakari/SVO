@@ -1,0 +1,7 @@
+name: vcd
+status: todo
+description: "Reserved interface for Visual Contrastive Decoding baseline."
+todo:
+  - "Attach a reproducible VCD implementation."
+  - "Keep the same prompt, generation length, decoding seed, and dataset splits as Base."
+  - "Record dependency versions and any incompatibility in README before reporting results."

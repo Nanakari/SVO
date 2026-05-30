@@ -1,0 +1,8 @@
+name: svo_without_position
+display_name: "w/o Position"
+description: "SVO risk scoring ablation without object position risk."
+base_method: svo
+risk_terms:
+  uncertainty: true
+  position: false
+  prior: true

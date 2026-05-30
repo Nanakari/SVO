@@ -1,0 +1,12 @@
+name: random_verify
+description: "Randomly verify the same per-image number of objects as Ours/SVO."
+pipeline:
+  generate_caption: true
+  extract_objects: true
+  score_risk: false
+  verify_objects: true
+  verify_policy: matched_random
+  matched_method: svo
+  revise_text: true
+random:
+  seed: 42

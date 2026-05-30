@@ -1,0 +1,33 @@
+experiment:
+  name: cloud_svo
+  description: Cloud reproduction manifest for the SVO object verification pipeline.
+  environment: SVO
+
+paths:
+  config: configs/default.yaml
+  assets: configs/assets.yaml
+  output_dir: outputs
+
+datasets:
+  - coco_chair
+  - pope
+  - amber_object
+
+methods:
+  core:
+    - base
+    - verify_all
+    - random_verify
+    - svo
+  ablations:
+    - svo_without_uncertainty
+    - svo_without_position
+    - svo_without_prior
+  reserved:
+    - vcd
+    - opera
+
+notes:
+  - GroundingDINO thresholds must be set from validation data, not from test metrics.
+  - VCD and OPERA are reserved interfaces and are not run by scripts/run_all.sh by default.
+  - Tables are exported only from metric JSON files under outputs/metrics.

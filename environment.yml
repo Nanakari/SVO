@@ -1,0 +1,10 @@
+name: SVO
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip>=23
+  - setuptools>=68
+  - wheel
+  - pip:
+      - -e .[eval,dev]
