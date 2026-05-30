@@ -27,8 +27,8 @@ SVO tradeoff:
 - lower threshold: more objects verified, higher cost, usually fewer missed hallucinations;
 - higher threshold: fewer objects verified, lower cost, usually fewer corrections.
 
-Choose this value on the COCO train2017 validation split, then freeze it before running the final
-test metrics.
+Choose this value on the COCO train2017 random 2000-image validation split, then freeze it before
+running the final test metrics.
 
 ## Optional Sensitivity Analysis
 

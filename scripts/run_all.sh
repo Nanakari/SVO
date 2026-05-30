@@ -9,7 +9,9 @@ DATASETS="coco_chair,pope"
 METHODS="base,svo,verify_all,random_verify"
 RISK_THRESHOLD="${RISK_THRESHOLD:-}"
 LIMIT="${LIMIT:-}"
-PRIOR_LIMIT="${PRIOR_LIMIT:-500}"
+PRIOR_LIMIT="${PRIOR_LIMIT:-2000}"
+PRIOR_SPLIT_FILE="${PRIOR_SPLIT_FILE:-}"
+PRIOR_IMAGE_ROOT="${PRIOR_IMAGE_ROOT:-}"
 BUILD_PRIOR=1
 DRY_RUN=0
 
@@ -27,7 +29,9 @@ Options:
   --methods LIST            Comma list: base,svo,verify_all,random_verify,ablations,components,all.
   --risk-threshold FLOAT    SVO risk threshold. Required for real SVO verification unless config sets it.
   --limit N                 Limit caption/POPE inference for debugging.
-  --prior-limit N           COCO train2017 images for static prior captions. Default: 500
+  --prior-limit N           COCO train2017 images for static prior captions. Default: 2000
+  --prior-split-file PATH   Split file for validation/static-prior captions.
+  --prior-image-root DIR    Image root for validation/static-prior captions.
   --skip-prior              Do not build the COCO static prior.
   --gpu IDS                 Export CUDA_VISIBLE_DEVICES.
   -h, --help                Show this help.
@@ -70,6 +74,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prior-limit)
       PRIOR_LIMIT="$2"
+      shift 2
+      ;;
+    --prior-split-file)
+      PRIOR_SPLIT_FILE="$2"
+      shift 2
+      ;;
+    --prior-image-root)
+      PRIOR_IMAGE_ROOT="$2"
       shift 2
       ;;
     --skip-prior)
@@ -149,14 +161,29 @@ fi
 
 run_static_prior() {
   local prior_captions="$OUTPUT_DIR/predictions/coco_train2017_val${PRIOR_LIMIT}_base_captions.jsonl"
+  local prior_split="${PRIOR_SPLIT_FILE:-configs/splits/coco_train2017_val${PRIOR_LIMIT}_seed42.txt}"
+  local prior_image_root="$PRIOR_IMAGE_ROOT"
+  if [[ -z "$prior_image_root" ]]; then
+    if [[ -d "data/coco/train2017_val${PRIOR_LIMIT}" ]]; then
+      prior_image_root="data/coco/train2017_val${PRIOR_LIMIT}"
+    else
+      prior_image_root="data/coco/train2017"
+    fi
+  fi
+  run_cmd "$PYTHON" scripts/make_val_split.py \
+    --coco-annotations data/coco/annotations/instances_train2017.json \
+    --sample-size "$PRIOR_LIMIT" \
+    --seed 42 \
+    --output "$prior_split"
   run_cmd "$PYTHON" scripts/run_caption.py \
     --config "$CONFIG" \
     --dataset configs/datasets/coco_chair.yaml \
     --method configs/methods/base.yaml \
     --output "$prior_captions" \
     --limit "$PRIOR_LIMIT" \
-    --set dataset.paths.image_root=data/coco/train2017 \
-    --set dataset.paths.annotation_file=data/coco/annotations/instances_train2017.json
+    --set "dataset.paths.image_root=$prior_image_root" \
+    --set dataset.paths.annotation_file=data/coco/annotations/instances_train2017.json \
+    --set "dataset.paths.split_file=$prior_split"
   run_cmd "$PYTHON" scripts/build_static_prior.py \
     --config "$CONFIG" \
     --captions "$prior_captions" \
@@ -240,6 +267,16 @@ verify_and_revise_coco() {
     --method "$method"
 }
 
+verify_coco_reference() {
+  local objects="$1"
+  local reference="$OUTPUT_DIR/verifications/coco_chair_svo.jsonl"
+  local verify_cmd=("$PYTHON" scripts/verify_objects.py --config "$CONFIG" --method configs/methods/svo.yaml --input "$objects" --output "$reference" "${verification_limit_args[@]}")
+  if [[ "${#risk_args[@]}" -gt 0 ]]; then
+    verify_cmd+=("${risk_args[@]}")
+  fi
+  run_cmd "${verify_cmd[@]}"
+}
+
 run_coco_methods() {
   if [[ "$BUILD_PRIOR" -eq 1 ]]; then
     run_static_prior
@@ -262,6 +299,9 @@ run_coco_methods() {
     verify_and_revise_coco "verify_all" "$svo_objects"
   fi
   if method_enabled "random_verify"; then
+    if ! method_enabled "svo"; then
+      verify_coco_reference "$svo_objects"
+    fi
     verify_and_revise_coco "random_verify" "$svo_objects" "$OUTPUT_DIR/verifications/coco_chair_svo.jsonl"
   fi
 

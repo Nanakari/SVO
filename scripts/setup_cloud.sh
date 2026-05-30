@@ -6,7 +6,7 @@ ENV_NAME="${ENV_NAME:-SVO}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 CONDA_BIN="${CONDA_BIN:-conda}"
 WITH_MODELS=0
-WITH_NLP=0
+WITH_NLP=1
 CHECK_ONLY=0
 
 usage() {
@@ -19,7 +19,8 @@ Options:
   --env-name NAME       Conda environment name. Default: SVO
   --python VERSION     Python version. Default: 3.10
   --with-models        Install CUDA 12 PyTorch and model dependencies.
-  --with-nlp           Install NLP dependencies and the spaCy small English model.
+  --with-nlp           Install NLP dependencies and the spaCy small English model. Default.
+  --without-nlp        Skip NLP dependencies; use only rule-based smoke/test paths.
   --check-only         Only print environment diagnostics; do not install.
   -h, --help           Show this help.
 
@@ -44,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --with-nlp)
       WITH_NLP=1
+      shift
+      ;;
+    --without-nlp)
+      WITH_NLP=0
       shift
       ;;
     --check-only)

@@ -13,6 +13,7 @@ Command-line entry points are added phase by phase:
 - `export_results.py` for table templates and metric-based exports. Implemented in stage 7.
 - `setup_cloud.sh` for creating/checking the Ubuntu CUDA 12 conda environment.
 - `prepare_data.sh` for creating the data layout and optionally downloading public COCO files.
+- `prepare_coco_subset.py` for copying/downloading train2017 split images without requiring full train2017.
 - `download_models.sh` for confirmed LLaVA/GroundingDINO asset preparation.
 - `run_all.sh` for dry-run or real end-to-end experiment orchestration.
 - `smoke_test.sh` for the no-model toy fixture pipeline.

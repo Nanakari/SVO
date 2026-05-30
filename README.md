@@ -21,6 +21,7 @@ bash scripts/run_all.sh --dry-run
 
 ```bash
 bash scripts/prepare_data.sh --download-coco-required --confirm
+bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 2000 --confirm
 bash scripts/download_models.sh --confirm --install-groundingdino
 python scripts/check_assets.py --strict
 ```
@@ -129,6 +130,7 @@ GroundingDINO 的安装方式会随上游仓库变化，后续实现阶段会在
 data/
   coco/
     train2017/
+    train2017_val2000/
     val2014/
     val2017/
     annotations/
@@ -147,13 +149,14 @@ data/
 - POPE：读取 random/popular/adversarial 问答样本，支持 Yes-to-No 修正协议和 Accuracy、Precision、Recall、F1、Yes Ratio。
 - AMBER Object Subset：只读取对象存在性相关样本，不纳入属性、关系和 OCR 项。
 
-验证集阈值调参使用 COCO train2017 随机 500 张图像，测试集不得参与调参。
+验证集阈值调参默认使用 COCO train2017 随机 2000 张图像，测试集不得参与调参。
 
 可使用以下脚本创建目录或下载公开 COCO 文件：
 
 ```bash
 bash scripts/prepare_data.sh
 bash scripts/prepare_data.sh --download-coco-required --confirm
+bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 2000 --confirm
 ```
 
 生成验证 split：
@@ -161,9 +164,13 @@ bash scripts/prepare_data.sh --download-coco-required --confirm
 ```bash
 python scripts/make_val_split.py \
   --coco-annotations data/coco/annotations/instances_train2017.json \
-  --sample-size 500 \
+  --sample-size 2000 \
   --seed 42
 ```
+
+如果你已经下载了完整 `train2017/`，subset 脚本会从完整目录复制 split 中的图像；如果没有完整
+`train2017/`，可以加 `--download-missing-subset --confirm` 只下载 split 需要的图片。完整
+`train2017/` 仍然兼容，只要同时传入同一个 `split_file` 即可限制验证集样本。
 
 ## 模型准备
 

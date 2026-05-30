@@ -21,7 +21,7 @@ from paper_reproduce.evaluation.sweep_tables import (
     format_float_display,
     format_float_label,
 )
-from paper_reproduce.utils.config import resolve_path
+from paper_reproduce.utils.config import load_yaml, resolve_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,6 +58,7 @@ def main() -> None:
     output_dir = resolve_path(args.output_dir, PROJECT_ROOT)
     metrics_dir = output_dir / "metrics"
     table_dir = output_dir / "tables"
+    dataset_name = _dataset_name(args.dataset)
     rows = []
 
     pairs = list(itertools.product(args.box_thresholds, args.text_thresholds))
@@ -122,7 +123,7 @@ def main() -> None:
             "--method",
             method_name,
             "--output",
-            str(metrics_dir / f"coco_chair_{method_name}_chair.json"),
+            str(metrics_dir / f"{dataset_name}_{method_name}_chair.json"),
         ]
         _add_optional_eval_args(chair_cmd, args)
 
@@ -142,7 +143,7 @@ def main() -> None:
             "--method",
             method_name,
             "--output",
-            str(metrics_dir / f"coco_chair_{method_name}_efficiency.json"),
+            str(metrics_dir / f"{dataset_name}_{method_name}_efficiency.json"),
         ]
         if args.base_predictions:
             efficiency_cmd.extend(["--base-predictions", args.base_predictions])
@@ -161,7 +162,7 @@ def main() -> None:
             "--method",
             method_name,
             "--output",
-            str(metrics_dir / f"coco_chair_{method_name}_false_correction.json"),
+            str(metrics_dir / f"{dataset_name}_{method_name}_false_correction.json"),
         ]
         _add_optional_eval_args(false_cmd, args)
 
@@ -200,6 +201,7 @@ def main() -> None:
                 "text_threshold",
                 "evidence_threshold",
             ],
+            dataset=dataset_name,
             missing_value=args.missing_value,
             precision=args.precision,
         )
@@ -214,6 +216,13 @@ def _add_optional_eval_args(command: list[str], args: argparse.Namespace) -> Non
         command.extend(["--coco-annotations", args.coco_annotations])
     if args.backend:
         command.extend(["--backend", args.backend])
+
+
+def _dataset_name(value: str) -> str:
+    path = resolve_path(value, PROJECT_ROOT)
+    if path is not None and path.exists():
+        return str(load_yaml(path).get("name", path.stem))
+    return value
 
 
 def _run(command: list[str], *, dry_run: bool) -> None:

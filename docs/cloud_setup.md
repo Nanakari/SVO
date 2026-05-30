@@ -17,10 +17,11 @@ For real model inference on CUDA 12:
 bash scripts/setup_cloud.sh --env-name SVO --with-models
 ```
 
-For spaCy extraction instead of the dependency-free rule extractor:
+spaCy extraction is installed by default because `configs/default.yaml` uses `backend: spacy`.
+For dependency-light smoke/test-only setup, skip it:
 
 ```bash
-bash scripts/setup_cloud.sh --env-name SVO --with-nlp
+bash scripts/setup_cloud.sh --env-name SVO --without-nlp
 ```
 
 ## 2. Check the Environment

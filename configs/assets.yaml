@@ -19,8 +19,9 @@ datasets:
   coco_chair:
     image_root: data/coco/val2014
     annotation_file: data/coco/annotations/instances_val2014.json
-    validation_image_root: data/coco/train2017
+    validation_image_root: data/coco/train2017_val2000
     validation_annotation_file: data/coco/annotations/instances_train2017.json
+    validation_split_file: configs/splits/coco_train2017_val2000_seed42.txt
   pope:
     image_root: data/coco/val2014
     random: data/pope/random.jsonl

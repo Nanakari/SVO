@@ -4,12 +4,14 @@ task: caption_hallucination
 paths:
   image_root: data/coco/val2014
   annotation_file: data/coco/annotations/instances_val2014.json
+  split_file: null
   captions_file: null
 
 validation:
-  image_root: data/coco/train2017
+  image_root: data/coco/train2017_val2000
   annotation_file: data/coco/annotations/instances_train2017.json
-  sample_size: 500
+  split_file: configs/splits/coco_train2017_val2000_seed42.txt
+  sample_size: 2000
   seed: 42
 
 evaluation:

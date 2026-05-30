@@ -24,11 +24,11 @@ def parse_args() -> argparse.Namespace:
         description="Sample deterministic image ids from a COCO annotation JSON."
     )
     parser.add_argument("--coco-annotations", required=True, help="COCO instances annotation JSON.")
-    parser.add_argument("--sample-size", type=int, default=500, help="Number of image ids to sample.")
+    parser.add_argument("--sample-size", type=int, default=2000, help="Number of image ids to sample.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument(
         "--output",
-        default="configs/splits/coco_train2017_val500_seed42.txt",
+        default="configs/splits/coco_train2017_val2000_seed42.txt",
         help="Output split file.",
     )
     parser.add_argument(
