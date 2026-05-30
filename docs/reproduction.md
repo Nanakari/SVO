@@ -53,6 +53,38 @@ bash scripts/run_all.sh \
   --gpu 0
 ```
 
+Single-component risk analysis:
+
+```bash
+bash scripts/run_all.sh \
+  --datasets coco_chair \
+  --methods components \
+  --risk-threshold <VAL_THRESHOLD> \
+  --gpu 0
+```
+
+Threshold sensitivity analysis:
+
+```bash
+python scripts/sweep_thresholds.py \
+  --objects outputs/objects/coco_chair_svo_objects.jsonl \
+  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --thresholds 0.5 1.0 1.5 2.0 \
+  --coco-annotations data/coco/annotations/instances_val2014.json
+```
+
+Detector sensitivity analysis:
+
+```bash
+python scripts/sweep_detector_thresholds.py \
+  --objects outputs/objects/coco_chair_svo_objects.jsonl \
+  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --risk-threshold <VAL_THRESHOLD> \
+  --box-thresholds 0.25 0.35 0.45 \
+  --text-thresholds 0.20 0.25 0.30 \
+  --coco-annotations data/coco/annotations/instances_val2014.json
+```
+
 AMBER Object Subset evaluation needs an existing prediction JSONL:
 
 ```bash

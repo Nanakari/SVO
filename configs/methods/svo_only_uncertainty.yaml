@@ -1,0 +1,15 @@
+name: svo_only_uncertainty
+display_name: "Uncertainty Only"
+description: "SVO risk scoring component analysis using only generation uncertainty."
+base_method: svo
+pipeline:
+  generate_caption: true
+  extract_objects: true
+  score_risk: true
+  verify_objects: true
+  verify_policy: risk_threshold
+  revise_text: true
+risk_terms:
+  uncertainty: true
+  position: false
+  prior: false

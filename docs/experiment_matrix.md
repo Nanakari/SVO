@@ -17,6 +17,21 @@
 | `configs/methods/svo_without_position.yaml` | position |
 | `configs/methods/svo_without_prior.yaml` | static prior |
 
+## Risk Component Analysis
+
+| Method Config | Enabled Term |
+| --- | --- |
+| `configs/methods/svo_only_uncertainty.yaml` | uncertainty |
+| `configs/methods/svo_only_position.yaml` | position |
+| `configs/methods/svo_only_prior.yaml` | static prior |
+
+## Sensitivity Analysis
+
+| Script | Variable | Output |
+| --- | --- | --- |
+| `scripts/sweep_thresholds.py` | SVO risk threshold | `outputs/sweeps/risk_threshold/tables/threshold_sweep.*` |
+| `scripts/sweep_detector_thresholds.py` | GroundingDINO box/text thresholds | `outputs/sweeps/detector_thresholds/tables/detector_sensitivity.*` |
+
 ## Datasets and Metrics
 
 | Dataset | Script Task | Metrics |

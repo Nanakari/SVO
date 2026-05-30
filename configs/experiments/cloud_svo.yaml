@@ -23,6 +23,10 @@ methods:
     - svo_without_uncertainty
     - svo_without_position
     - svo_without_prior
+  component_analysis:
+    - svo_only_uncertainty
+    - svo_only_position
+    - svo_only_prior
   reserved:
     - vcd
     - opera
@@ -31,3 +35,4 @@ notes:
   - GroundingDINO thresholds must be set from validation data, not from test metrics.
   - VCD and OPERA are reserved interfaces and are not run by scripts/run_all.sh by default.
   - Tables are exported only from metric JSON files under outputs/metrics.
+  - Threshold and detector sensitivity scripts generate their own sweep tables from real metrics.

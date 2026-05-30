@@ -37,6 +37,27 @@ bash scripts/run_all.sh \
 
 `<VAL_THRESHOLD>` 必须来自验证集调参，不能用测试集结果反推。详见 `docs/reproduction.md`。
 
+扩展消融和敏感性分析：
+
+```bash
+# 单风险信号分析：Uncertainty Only / Position Only / Prior Only
+bash scripts/run_all.sh --datasets coco_chair --methods components --risk-threshold <VAL_THRESHOLD>
+
+# SVO 风险阈值扫描
+python scripts/sweep_thresholds.py \
+  --objects outputs/objects/coco_chair_svo_objects.jsonl \
+  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --thresholds 0.5 1.0 1.5 2.0
+
+# GroundingDINO 阈值敏感性分析
+python scripts/sweep_detector_thresholds.py \
+  --objects outputs/objects/coco_chair_svo_objects.jsonl \
+  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --risk-threshold <VAL_THRESHOLD> \
+  --box-thresholds 0.25 0.35 0.45 \
+  --text-thresholds 0.20 0.25 0.30
+```
+
 ## 方法范围
 
 SVO 是训练免费的选择性后处理式视觉验证方法：
@@ -282,6 +303,7 @@ python scripts/check_assets.py
 - `docs/model_zoo.md`
 - `docs/reproduction.md`
 - `docs/experiment_matrix.md`
+- `docs/hyperparameters.md`
 - `docs/troubleshooting.md`
 
 ## 实验方法清单
@@ -299,6 +321,9 @@ python scripts/check_assets.py
 - w/o Uncertainty：去掉生成不确定性。
 - w/o Position：去掉位置风险。
 - w/o Prior：去掉静态幻觉先验。
+- Uncertainty Only：只保留生成不确定性。
+- Position Only：只保留位置风险。
+- Prior Only：只保留静态幻觉先验。
 
 预留方法：
 

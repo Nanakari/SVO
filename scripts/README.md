@@ -19,6 +19,8 @@ Command-line entry points are added phase by phase:
 - `run_tests.sh` for compile, pytest, and smoke checks.
 - `make_val_split.py` for deterministic COCO train2017 validation splits.
 - `check_assets.py` for local dataset/model path validation.
+- `sweep_thresholds.py` for SVO risk-threshold sensitivity tables.
+- `sweep_detector_thresholds.py` for GroundingDINO box/text-threshold sensitivity tables.
 
 The SVO pipeline is intentionally decomposed into explicit steps (`extract_objects.py`,
 `verify_objects.py`, `revise_captions.py`, and `evaluate.py`) so each intermediate file can be

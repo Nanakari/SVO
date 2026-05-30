@@ -24,7 +24,7 @@ Options:
   --config PATH             Global YAML config. Default: configs/default.yaml
   --output-dir DIR          Output root. Default: outputs
   --datasets LIST           Comma list: coco_chair,pope,amber_object,all. Default: coco_chair,pope
-  --methods LIST            Comma list: base,svo,verify_all,random_verify,ablations,all.
+  --methods LIST            Comma list: base,svo,verify_all,random_verify,ablations,components,all.
   --risk-threshold FLOAT    SVO risk threshold. Required for real SVO verification unless config sets it.
   --limit N                 Limit caption/POPE inference for debugging.
   --prior-limit N           COCO train2017 images for static prior captions. Default: 500
@@ -105,7 +105,9 @@ dataset_enabled() {
 }
 
 method_enabled() {
-  contains_item "$METHODS" "$1" || { [[ "$1" == svo_without_* ]] && contains_item "$METHODS" "ablations"; }
+  contains_item "$METHODS" "$1" \
+    || { [[ "$1" == svo_without_* ]] && contains_item "$METHODS" "ablations"; } \
+    || { [[ "$1" == svo_only_* ]] && contains_item "$METHODS" "components"; }
 }
 
 run_cmd() {
@@ -141,7 +143,7 @@ fi
 risk_args=()
 if [[ -n "$RISK_THRESHOLD" ]]; then
   risk_args=(--risk-threshold "$RISK_THRESHOLD")
-elif [[ "$DRY_RUN" -eq 0 ]] && { method_enabled "svo" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior" || method_enabled "random_verify"; }; then
+elif [[ "$DRY_RUN" -eq 0 ]] && { method_enabled "svo" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior" || method_enabled "svo_only_uncertainty" || method_enabled "svo_only_position" || method_enabled "svo_only_prior" || method_enabled "random_verify"; }; then
   echo "No --risk-threshold supplied; verify_objects.py will use risk_scoring.threshold from $CONFIG." >&2
 fi
 
@@ -242,7 +244,7 @@ run_coco_methods() {
   if [[ "$BUILD_PRIOR" -eq 1 ]]; then
     run_static_prior
   fi
-  if method_enabled "base" || method_enabled "svo" || method_enabled "verify_all" || method_enabled "random_verify" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior"; then
+  if method_enabled "base" || method_enabled "svo" || method_enabled "verify_all" || method_enabled "random_verify" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior" || method_enabled "svo_only_uncertainty" || method_enabled "svo_only_position" || method_enabled "svo_only_prior"; then
     generate_coco_base_captions
   fi
   if method_enabled "base"; then
@@ -267,6 +269,12 @@ run_coco_methods() {
     if method_enabled "$ablation"; then
       extract_coco_objects "$ablation"
       verify_and_revise_coco "$ablation" "$OUTPUT_DIR/objects/coco_chair_${ablation}_objects.jsonl"
+    fi
+  done
+  for component in svo_only_uncertainty svo_only_position svo_only_prior; do
+    if method_enabled "$component"; then
+      extract_coco_objects "$component"
+      verify_and_revise_coco "$component" "$OUTPUT_DIR/objects/coco_chair_${component}_objects.jsonl"
     fi
   done
 }

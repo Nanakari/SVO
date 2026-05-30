@@ -1,0 +1,15 @@
+name: svo_only_prior
+display_name: "Prior Only"
+description: "SVO risk scoring component analysis using only static hallucination prior."
+base_method: svo
+pipeline:
+  generate_caption: true
+  extract_objects: true
+  score_risk: true
+  verify_objects: true
+  verify_policy: risk_threshold
+  revise_text: true
+risk_terms:
+  uncertainty: false
+  position: false
+  prior: true

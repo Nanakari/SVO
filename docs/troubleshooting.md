@@ -39,6 +39,10 @@ python scripts/check_assets.py
 `scripts/evaluate.py` command first and confirm the `method`, `dataset`, and `task` fields match the
 table template.
 
+Sweep scripts write their own tables under `outputs/sweeps/<sweep_name>/tables`. If those tables
+show `NA`, inspect the matching `outputs/sweeps/<sweep_name>/metrics` directory and confirm the
+per-threshold evaluation commands completed.
+
 ## Generated outputs should not be committed
 
 `outputs/`, `data/`, and `models/` are ignored by default except for their README files. Keep real

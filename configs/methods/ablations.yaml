@@ -26,3 +26,24 @@ methods:
       uncertainty: true
       position: true
       prior: false
+  only_uncertainty:
+    display_name: "Uncertainty Only"
+    base_method: svo
+    risk_terms:
+      uncertainty: true
+      position: false
+      prior: false
+  only_position:
+    display_name: "Position Only"
+    base_method: svo
+    risk_terms:
+      uncertainty: false
+      position: true
+      prior: false
+  only_prior:
+    display_name: "Prior Only"
+    base_method: svo
+    risk_terms:
+      uncertainty: false
+      position: false
+      prior: true
