@@ -37,14 +37,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--split-file",
-        default="configs/splits/coco_train2017_val2000_seed42.txt",
+        default="configs/splits/coco_train2017_val5000_seed42.txt",
         help="Split file with one image_id per line. Created if missing.",
     )
-    parser.add_argument("--sample-size", type=int, default=2000, help="Image count if split is created.")
+    parser.add_argument("--sample-size", type=int, default=5000, help="Image count if split is created.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed if split is created.")
     parser.add_argument(
         "--output-image-root",
-        default="data/coco/train2017_val2000",
+        default="data/coco/train2017_val5000",
         help="Destination image subset directory.",
     )
     parser.add_argument(

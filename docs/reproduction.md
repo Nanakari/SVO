@@ -16,7 +16,7 @@ bash scripts/run_all.sh --dry-run
 
 ```bash
 bash scripts/prepare_data.sh --download-coco-required --confirm
-bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 2000 --confirm
+bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 5000 --confirm
 bash scripts/download_models.sh --confirm --install-groundingdino
 python scripts/check_assets.py --strict
 ```
@@ -25,7 +25,7 @@ Update `configs/default.yaml` or pass `--set` overrides for local model paths.
 
 ## 3. Tune SVO Threshold on Validation Data
 
-Generate validation captions and static priors on the fixed 2000-image train2017 split, then choose
+Generate validation captions and static priors on the fixed 5000-image train2017 split, then choose
 the SVO threshold from validation metrics only. The repository does not include a hard-coded paper
 threshold.
 

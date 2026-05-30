@@ -9,7 +9,7 @@ DATASETS="coco_chair,pope"
 METHODS="base,svo,verify_all,random_verify"
 RISK_THRESHOLD="${RISK_THRESHOLD:-}"
 LIMIT="${LIMIT:-}"
-PRIOR_LIMIT="${PRIOR_LIMIT:-2000}"
+PRIOR_LIMIT="${PRIOR_LIMIT:-5000}"
 PRIOR_SPLIT_FILE="${PRIOR_SPLIT_FILE:-}"
 PRIOR_IMAGE_ROOT="${PRIOR_IMAGE_ROOT:-}"
 BUILD_PRIOR=1
@@ -29,7 +29,7 @@ Options:
   --methods LIST            Comma list: base,svo,verify_all,random_verify,ablations,components,all.
   --risk-threshold FLOAT    SVO risk threshold. Required for real SVO verification unless config sets it.
   --limit N                 Limit caption/POPE inference for debugging.
-  --prior-limit N           COCO train2017 images for static prior captions. Default: 2000
+  --prior-limit N           COCO train2017 images for static prior captions. Default: 5000
   --prior-split-file PATH   Split file for validation/static-prior captions.
   --prior-image-root DIR    Image root for validation/static-prior captions.
   --skip-prior              Do not build the COCO static prior.

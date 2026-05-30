@@ -8,7 +8,7 @@ DOWNLOAD_COCO_REQUIRED=0
 DOWNLOAD_COCO_ANNOTATIONS=0
 DOWNLOAD_TRAIN2017_FULL=0
 PREPARE_TRAIN2017_SUBSET=0
-TRAIN2017_SUBSET_SIZE=2000
+TRAIN2017_SUBSET_SIZE=5000
 TRAIN2017_SPLIT_FILE=""
 TRAIN2017_SOURCE_ROOT=""
 DOWNLOAD_MISSING_SUBSET=0
@@ -26,7 +26,7 @@ Options:
   --download-coco-annotations  Download only COCO annotation ZIP files.
   --download-train2017-full    Also download full COCO train2017 images.
   --prepare-train2017-subset   Prepare train2017 validation subset images from split ids.
-  --subset-size N              Subset size when creating split. Default: 2000
+  --subset-size N              Subset size when creating split. Default: 5000
   --split-file PATH            Split file path. Default: configs/splits/coco_train2017_val<N>_seed42.txt
   --source-image-root DIR      Full train2017 directory to copy from. Default: data/coco/train2017
   --download-missing-subset    Download subset images missing from source-image-root.
