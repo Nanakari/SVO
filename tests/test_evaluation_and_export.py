@@ -45,8 +45,9 @@ def test_export_tables_preserves_missing_cells(tmp_path: Path) -> None:
     table = build_table(selected_specs(["chair_main"])[0], metric_files, missing_value="NA")
     ours = next(row for row in table["rows"] if row["label"] == "Ours")
 
-    assert ours["display"]["CHAIRs ↓"] == "0.25"
+    assert ours["display"]["CHAIRs (lower)"] == "0.25"
     assert ours["display"]["Avg. Length"] == "NA"
+    assert "CHAIRs (lower)" in table["columns"]
 
     written = export_table(table, tmp_path / "tables", formats=["md", "csv", "json"])
     assert {path.suffix for path in written} == {".md", ".csv", ".json"}

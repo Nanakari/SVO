@@ -35,27 +35,31 @@ running the final test metrics.
 Risk threshold sweep:
 
 ```bash
-python scripts/sweep_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
-  --thresholds 0.5 1.0 1.5 2.0 \
-  --coco-annotations data/coco/annotations/instances_val2014.json
+bash scripts/tune_svo_threshold.sh \
+  --thresholds "0.5 1.0 1.5 2.0" \
+  --gpu 0
 ```
+
+The wrapper writes validation-only artifacts under `outputs/validation/`, builds the static prior
+from train2017 validation captions, and evaluates every threshold against
+`instances_train2017.json` with the fixed split file.
 
 GroundingDINO threshold sweep:
 
 ```bash
 python scripts/sweep_detector_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --objects outputs/validation/objects/coco_train2017_val5000_svo_objects.jsonl \
+  --base-predictions outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl \
   --risk-threshold <VAL_THRESHOLD> \
   --box-thresholds 0.25 0.35 0.45 \
   --text-thresholds 0.20 0.25 0.30 \
-  --coco-annotations data/coco/annotations/instances_val2014.json
+  --coco-annotations data/coco/annotations/instances_train2017.json \
+  --output-dir outputs/validation/sweeps/detector_thresholds
 ```
 
-Both scripts write metrics and tables under `outputs/sweeps/...`. These outputs are generated from
-real metric JSON files; missing cells indicate that a metric was not produced.
+The validation wrapper writes under `outputs/validation/...`. The lower-level sweep scripts write
+under the `--output-dir` you pass. These outputs are generated from real metric JSON files; missing
+cells indicate that a metric was not produced.
 
 ## Risk Component Analysis
 

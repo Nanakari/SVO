@@ -29,6 +29,7 @@
 
 | Script | Variable | Output |
 | --- | --- | --- |
+| `scripts/tune_svo_threshold.sh` | Validation-only SVO risk threshold | `outputs/validation/sweeps/risk_threshold/tables/threshold_sweep.*` |
 | `scripts/sweep_thresholds.py` | SVO risk threshold | `outputs/sweeps/risk_threshold/tables/threshold_sweep.*` |
 | `scripts/sweep_detector_thresholds.py` | GroundingDINO box/text thresholds | `outputs/sweeps/detector_thresholds/tables/detector_sensitivity.*` |
 

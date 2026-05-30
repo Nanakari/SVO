@@ -85,10 +85,15 @@ TABLE_SPECS: dict[str, TableSpec] = {
         title="CHAIR Main Results",
         rows=METHOD_ROWS["main"],
         columns=(
-            ColumnSpec("CHAIRs ↓", "chair", ("chairs",), "coco_chair"),
-            ColumnSpec("CHAIRi ↓", "chair", ("chairi",), "coco_chair"),
+            ColumnSpec("CHAIRs (lower)", "chair", ("chairs",), "coco_chair"),
+            ColumnSpec("CHAIRi (lower)", "chair", ("chairi",), "coco_chair"),
             ColumnSpec("Avg. Length", "chair", ("average_length",), "coco_chair"),
-            ColumnSpec("Correct Object Coverage ↑", "chair", ("correct_object_coverage",), "coco_chair"),
+            ColumnSpec(
+                "Correct Object Coverage (higher)",
+                "chair",
+                ("correct_object_coverage",),
+                "coco_chair",
+            ),
         ),
     ),
     "pope_detailed": TableSpec(
@@ -129,10 +134,15 @@ TABLE_SPECS: dict[str, TableSpec] = {
         title="Risk Scoring Ablation",
         rows=METHOD_ROWS["ablation"],
         columns=(
-            ColumnSpec("CHAIRs ↓", "chair", ("chairs",), "coco_chair"),
-            ColumnSpec("CHAIRi ↓", "chair", ("chairi",), "coco_chair"),
-            ColumnSpec("Verification Rate ↓", "efficiency", ("verification_rate",), "coco_chair"),
-            ColumnSpec("Latency × ↓", "efficiency", ("relative_latency",), "coco_chair"),
+            ColumnSpec("CHAIRs (lower)", "chair", ("chairs",), "coco_chair"),
+            ColumnSpec("CHAIRi (lower)", "chair", ("chairi",), "coco_chair"),
+            ColumnSpec(
+                "Verification Rate (lower)",
+                "efficiency",
+                ("verification_rate",),
+                "coco_chair",
+            ),
+            ColumnSpec("Latency x (lower)", "efficiency", ("relative_latency",), "coco_chair"),
         ),
     ),
     "efficiency": TableSpec(
@@ -140,11 +150,21 @@ TABLE_SPECS: dict[str, TableSpec] = {
         title="Efficiency Analysis",
         rows=METHOD_ROWS["main"],
         columns=(
-            ColumnSpec("CHAIRs ↓", "chair", ("chairs",), "coco_chair"),
-            ColumnSpec("CHAIRi ↓", "chair", ("chairi",), "coco_chair"),
-            ColumnSpec("Verification Rate ↓", "efficiency", ("verification_rate",), "coco_chair"),
-            ColumnSpec("External Queries / Image ↓", "efficiency", ("external_queries_per_image",), "coco_chair"),
-            ColumnSpec("Latency × ↓", "efficiency", ("relative_latency",), "coco_chair"),
+            ColumnSpec("CHAIRs (lower)", "chair", ("chairs",), "coco_chair"),
+            ColumnSpec("CHAIRi (lower)", "chair", ("chairi",), "coco_chair"),
+            ColumnSpec(
+                "Verification Rate (lower)",
+                "efficiency",
+                ("verification_rate",),
+                "coco_chair",
+            ),
+            ColumnSpec(
+                "External Queries / Image (lower)",
+                "efficiency",
+                ("external_queries_per_image",),
+                "coco_chair",
+            ),
+            ColumnSpec("Latency x (lower)", "efficiency", ("relative_latency",), "coco_chair"),
         ),
     ),
     "false_correction": TableSpec(
@@ -153,18 +173,18 @@ TABLE_SPECS: dict[str, TableSpec] = {
         rows=METHOD_ROWS["correction"],
         columns=(
             ColumnSpec(
-                "Hallucinated Removal ↑",
+                "Hallucinated Removal (higher)",
                 "false_correction",
                 ("hallucinated_object_removal",),
                 "coco_chair",
             ),
             ColumnSpec(
-                "Correct Retention ↑",
+                "Correct Retention (higher)",
                 "false_correction",
                 ("correct_object_retention",),
                 "coco_chair",
             ),
-            ColumnSpec("FCR ↓", "false_correction", ("false_correction_rate",), "coco_chair"),
+            ColumnSpec("FCR (lower)", "false_correction", ("false_correction_rate",), "coco_chair"),
         ),
     ),
 }

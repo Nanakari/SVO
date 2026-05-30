@@ -26,6 +26,12 @@ bash scripts/download_models.sh --confirm --install-groundingdino
 python scripts/check_assets.py --strict
 ```
 
+验证集阈值调参只使用 COCO train2017_val5000：
+
+```bash
+bash scripts/tune_svo_threshold.sh --thresholds "0.5 1.0 1.5 2.0" --gpu 0
+```
+
 主实验运行示例：
 
 ```bash
@@ -44,19 +50,18 @@ bash scripts/run_all.sh \
 # 单风险信号分析：Uncertainty Only / Position Only / Prior Only
 bash scripts/run_all.sh --datasets coco_chair --methods components --risk-threshold <VAL_THRESHOLD>
 
-# SVO 风险阈值扫描
-python scripts/sweep_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
-  --thresholds 0.5 1.0 1.5 2.0
+# SVO 风险阈值扫描（只使用 train2017_val5000 验证集）
+bash scripts/tune_svo_threshold.sh --thresholds "0.5 1.0 1.5 2.0" --gpu 0
 
 # GroundingDINO 阈值敏感性分析
 python scripts/sweep_detector_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --objects outputs/validation/objects/coco_train2017_val5000_svo_objects.jsonl \
+  --base-predictions outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl \
   --risk-threshold <VAL_THRESHOLD> \
   --box-thresholds 0.25 0.35 0.45 \
-  --text-thresholds 0.20 0.25 0.30
+  --text-thresholds 0.20 0.25 0.30 \
+  --coco-annotations data/coco/annotations/instances_train2017.json \
+  --output-dir outputs/validation/sweeps/detector_thresholds
 ```
 
 ## 方法范围
@@ -236,7 +241,7 @@ python scripts/extract_objects.py --config configs/default.yaml --method configs
 python scripts/build_static_prior.py --config configs/default.yaml --captions outputs/predictions/coco_train_base_captions.jsonl --coco-annotations data/coco/annotations/instances_train2017.json
 
 # GroundingDINO visual verification for SVO-selected objects
-python scripts/verify_objects.py --config configs/default.yaml --method configs/methods/svo.yaml --input outputs/objects/coco_chair_base_captions_objects.jsonl --risk-threshold 1.5
+python scripts/verify_objects.py --config configs/default.yaml --method configs/methods/svo.yaml --input outputs/objects/coco_chair_base_captions_objects.jsonl --risk-threshold <VAL_THRESHOLD>
 
 # Verify-All baseline with the same detector
 python scripts/verify_objects.py --config configs/default.yaml --method configs/methods/verify_all.yaml --input outputs/objects/coco_chair_base_captions_objects.jsonl

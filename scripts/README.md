@@ -16,6 +16,7 @@ Command-line entry points are added phase by phase:
 - `prepare_coco_subset.py` for copying/downloading train2017 split images without requiring full train2017.
 - `download_models.sh` for confirmed LLaVA/GroundingDINO asset preparation.
 - `run_all.sh` for dry-run or real end-to-end experiment orchestration.
+- `tune_svo_threshold.sh` for validation-only SVO risk-threshold tuning on train2017_val5000.
 - `smoke_test.sh` for the no-model toy fixture pipeline.
 - `run_tests.sh` for compile, pytest, and smoke checks.
 - `make_val_split.py` for deterministic COCO train2017 validation splits.

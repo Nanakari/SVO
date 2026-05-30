@@ -30,10 +30,14 @@ the SVO threshold from validation metrics only. The repository does not include 
 threshold.
 
 ```bash
-bash scripts/run_all.sh --dry-run --datasets coco_chair --methods base,svo --risk-threshold <VAL_THRESHOLD>
+bash scripts/tune_svo_threshold.sh \
+  --thresholds "0.5 1.0 1.5 2.0" \
+  --gpu 0
 ```
 
-Replace `<VAL_THRESHOLD>` only after validating it on the COCO train2017 validation split.
+This writes validation-only outputs under `outputs/validation/`, including
+`outputs/validation/sweeps/risk_threshold/tables/threshold_sweep.md`. Replace
+`<VAL_THRESHOLD>` only after selecting it from this train2017 validation split.
 
 ## 4. Run Main Experiments
 
@@ -68,23 +72,22 @@ bash scripts/run_all.sh \
 Threshold sensitivity analysis:
 
 ```bash
-python scripts/sweep_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
-  --thresholds 0.5 1.0 1.5 2.0 \
-  --coco-annotations data/coco/annotations/instances_val2014.json
+bash scripts/tune_svo_threshold.sh \
+  --thresholds "0.5 1.0 1.5 2.0" \
+  --gpu 0
 ```
 
 Detector sensitivity analysis:
 
 ```bash
 python scripts/sweep_detector_thresholds.py \
-  --objects outputs/objects/coco_chair_svo_objects.jsonl \
-  --base-predictions outputs/predictions/coco_chair_base_captions.jsonl \
+  --objects outputs/validation/objects/coco_train2017_val5000_svo_objects.jsonl \
+  --base-predictions outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl \
   --risk-threshold <VAL_THRESHOLD> \
   --box-thresholds 0.25 0.35 0.45 \
   --text-thresholds 0.20 0.25 0.30 \
-  --coco-annotations data/coco/annotations/instances_val2014.json
+  --coco-annotations data/coco/annotations/instances_train2017.json \
+  --output-dir outputs/validation/sweeps/detector_thresholds
 ```
 
 AMBER Object Subset evaluation needs an existing prediction JSONL:

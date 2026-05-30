@@ -12,6 +12,8 @@ LIMIT="${LIMIT:-}"
 PRIOR_LIMIT="${PRIOR_LIMIT:-5000}"
 PRIOR_SPLIT_FILE="${PRIOR_SPLIT_FILE:-}"
 PRIOR_IMAGE_ROOT="${PRIOR_IMAGE_ROOT:-}"
+STATIC_PRIOR_PATH="${STATIC_PRIOR_PATH:-}"
+STATIC_PRIOR_PATH_EXPLICIT=0
 BUILD_PRIOR=1
 DRY_RUN=0
 
@@ -32,6 +34,7 @@ Options:
   --prior-limit N           COCO train2017 images for static prior captions. Default: 5000
   --prior-split-file PATH   Split file for validation/static-prior captions.
   --prior-image-root DIR    Image root for validation/static-prior captions.
+  --static-prior-path PATH  Static prior JSON used during object risk scoring.
   --skip-prior              Do not build the COCO static prior.
   --gpu IDS                 Export CUDA_VISIBLE_DEVICES.
   -h, --help                Show this help.
@@ -84,6 +87,11 @@ while [[ $# -gt 0 ]]; do
       PRIOR_IMAGE_ROOT="$2"
       shift 2
       ;;
+    --static-prior-path)
+      STATIC_PRIOR_PATH="$2"
+      STATIC_PRIOR_PATH_EXPLICIT=1
+      shift 2
+      ;;
     --skip-prior)
       BUILD_PRIOR=0
       shift
@@ -105,6 +113,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 cd "$ROOT_DIR"
+
+if [[ -z "$STATIC_PRIOR_PATH" ]]; then
+  STATIC_PRIOR_PATH="$OUTPUT_DIR/priors/coco_static_prior.json"
+fi
 
 contains_item() {
   local list="$1"
@@ -188,7 +200,7 @@ run_static_prior() {
     --config "$CONFIG" \
     --captions "$prior_captions" \
     --coco-annotations data/coco/annotations/instances_train2017.json \
-    --output "$OUTPUT_DIR/priors/coco_static_prior.json"
+    --output "$STATIC_PRIOR_PATH"
 }
 
 generate_coco_base_captions() {
@@ -216,11 +228,16 @@ extract_coco_objects() {
   local method="$1"
   local captions="$OUTPUT_DIR/predictions/coco_chair_base_captions.jsonl"
   local objects="$OUTPUT_DIR/objects/coco_chair_${method}_objects.jsonl"
+  local prior_args=()
+  if [[ "$BUILD_PRIOR" -eq 1 || "$STATIC_PRIOR_PATH_EXPLICIT" -eq 1 || -f "$STATIC_PRIOR_PATH" ]]; then
+    prior_args=(--set "risk_scoring.static_prior_path=$STATIC_PRIOR_PATH")
+  fi
   run_cmd "$PYTHON" scripts/extract_objects.py \
     --config "$CONFIG" \
     --method "configs/methods/${method}.yaml" \
     --input "$captions" \
-    --output "$objects"
+    --output "$objects" \
+    "${prior_args[@]}"
 }
 
 verify_and_revise_coco() {
