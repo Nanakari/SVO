@@ -16,6 +16,9 @@ Download after installing `huggingface_hub`:
 bash scripts/download_models.sh --confirm --skip-groundingdino
 ```
 
+The downloader supports both the current `hf download` command and the older
+`huggingface-cli download` fallback.
+
 Use a local path by overriding:
 
 ```bash
@@ -36,11 +39,26 @@ Download/clone assets:
 bash scripts/download_models.sh --confirm --skip-llava --install-groundingdino
 ```
 
+If the GitHub release download is slow from your cloud region, use the Hugging Face mirror/source
+path:
+
+```bash
+bash scripts/download_models.sh --confirm --skip-llava --groundingdino-source hf
+```
+
 Then pass or configure:
 
 ```bash
 --set verification.groundingdino.config_path=models/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py
 --set verification.groundingdino.checkpoint_path=models/groundingdino_swint_ogc.pth
+```
+
+Install the package after the CUDA-compatible PyTorch stack is already installed:
+
+```bash
+python -m pip install -r requirements-models-cu12.txt
+python -m pip install -U ninja wheel
+python -m pip install -e models/GroundingDINO --no-build-isolation
 ```
 
 ## Reserved Methods

@@ -46,6 +46,10 @@ bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 5000 --con
 If a full `data/coco/train2017/` directory already exists, the subset script copies from it. If it
 does not exist, add `--download-missing-subset --confirm` to download only the split images.
 
+The split and subset scripts stream the COCO JSON arrays instead of loading the full
+`instances_train2017.json` into memory. This keeps preparation usable on small cgroup memory limits
+while still producing the same deterministic split.
+
 If you store COCO elsewhere, update `configs/datasets/coco_chair.yaml` and
 `configs/datasets/pope.yaml`.
 

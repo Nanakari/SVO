@@ -1,9 +1,15 @@
-# CUDA 12 model stack. Install this inside the SVO environment on an NVIDIA host.
-# PyTorch wheels are resolved from the CUDA 12.1 index when available.
+# CUDA 12.1 model stack. Install this inside the SVO environment on an NVIDIA host.
+#
+# Keep PyTorch on cu121 because GroundingDINO compiles CUDA extensions against the system
+# /usr/local/cuda toolkit on the AutoDL/SeeTaCloud images used for this project. Exact
+# +cu121 pins prevent pip mirrors from selecting newer cu13 wheels that cannot be compiled
+# with a CUDA 12.1 nvcc.
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch>=2.3.0
-torchvision>=0.18.0
+torch==2.4.1+cu121
+torchvision==0.19.1+cu121
 accelerate>=0.27.0
 opencv-python>=4.8.0
 sentencepiece>=0.1.99
-transformers>=4.37.0
+tokenizers==0.22.2
+huggingface-hub==1.17.0
+transformers==5.9.0

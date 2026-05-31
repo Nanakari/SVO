@@ -8,13 +8,10 @@ loader as long as the same split file is supplied.
 from __future__ import annotations
 
 import argparse
-import json
-import random
 import shutil
 import sys
 import urllib.request
 from pathlib import Path
-from typing import Any, Mapping
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -22,6 +19,11 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from paper_reproduce.datasets.coco_stream import (
+    load_coco_image_index,
+    read_image_id_split,
+    sample_coco_image_ids,
+)
 from paper_reproduce.utils.config import resolve_path
 from paper_reproduce.utils.io import ensure_parent, write_json
 
@@ -94,14 +96,20 @@ def main() -> None:
         PROJECT_ROOT,
     )
 
-    images = _load_coco_images(annotation_path)
     image_ids = _load_or_create_split(
         split_path=split_path,
-        images=images,
+        annotation_path=annotation_path,
         sample_size=args.sample_size,
         seed=args.seed,
         dry_run=args.dry_run,
     )
+    images = load_coco_image_index(annotation_path, image_ids)
+    missing_annotation_ids = [image_id for image_id in image_ids if image_id not in images]
+    if missing_annotation_ids:
+        preview = ", ".join(missing_annotation_ids[:10])
+        raise ValueError(
+            f"Split contains {len(missing_annotation_ids)} ids not found in annotations: {preview}"
+        )
 
     stats = {
         "annotation_file": str(annotation_path),
@@ -165,68 +173,20 @@ def _existing_path(value: str, label: str) -> Path:
     return path
 
 
-def _load_coco_images(annotation_path: Path) -> dict[str, Mapping[str, Any]]:
-    with annotation_path.open("r", encoding="utf-8-sig") as handle:
-        data = json.load(handle)
-    images = data.get("images")
-    if not isinstance(images, list):
-        raise ValueError(f"COCO annotation file has no images list: {annotation_path}")
-    return {str(image["id"]): image for image in images if "id" in image and image.get("file_name")}
-
-
 def _load_or_create_split(
     *,
     split_path: Path,
-    images: Mapping[str, Mapping[str, Any]],
+    annotation_path: Path,
     sample_size: int,
     seed: int,
     dry_run: bool,
 ) -> list[str]:
     if split_path.exists():
-        image_ids = _read_split(split_path)
+        image_ids = read_image_id_split(split_path)
     else:
-        if sample_size > len(images):
-            raise ValueError(f"Requested {sample_size} images, but annotation contains {len(images)}")
-        image_ids = sorted(images, key=lambda value: int(value) if value.isdigit() else value)
-        rng = random.Random(seed)
-        rng.shuffle(image_ids)
-        image_ids = sorted(
-            image_ids[:sample_size],
-            key=lambda value: int(value) if value.isdigit() else value,
-        )
+        image_ids = sample_coco_image_ids(annotation_path, sample_size, seed)
         if not dry_run:
             ensure_parent(split_path).write_text("\n".join(image_ids) + "\n", encoding="utf-8")
-
-    missing = [image_id for image_id in image_ids if image_id not in images]
-    if missing:
-        preview = ", ".join(missing[:10])
-        raise ValueError(f"Split contains {len(missing)} ids not found in annotations: {preview}")
-    return image_ids
-
-
-def _read_split(split_path: Path) -> list[str]:
-    if split_path.suffix.lower() == ".json":
-        with split_path.open("r", encoding="utf-8-sig") as handle:
-            data = json.load(handle)
-        if isinstance(data, Mapping):
-            values = data.get("image_ids", [])
-        else:
-            values = data
-        return [str(value) for value in values]
-
-    image_ids: list[str] = []
-    with split_path.open("r", encoding="utf-8-sig") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if stripped.startswith("{"):
-                record = json.loads(stripped)
-                if "image_id" not in record:
-                    raise ValueError(f"JSONL split line {line_number} is missing image_id")
-                image_ids.append(str(record["image_id"]))
-            else:
-                image_ids.append(stripped.split()[0])
     return image_ids
 
 

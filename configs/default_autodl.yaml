@@ -1,0 +1,63 @@
+project:
+  name: paper_reproduce
+  output_dir: outputs
+  seed: 42
+
+runtime:
+  device: cuda
+  dtype: float16
+  num_workers: 4
+
+generation:
+  model_family: llava
+  model_name_or_path: models/llava-1.5-7b-hf
+  prompt: "Please describe this image in detail."
+  max_new_tokens: 128
+  temperature: 0.0
+  top_p: 1.0
+  do_sample: false
+  return_token_scores: true
+
+object_extraction:
+  backend: spacy
+  spacy_model: en_core_web_sm
+  vocabulary_path: configs/vocab/coco_objects.yaml
+  keep_visible_objects_only: true
+
+risk_scoring:
+  threshold: null
+  weights:
+    uncertainty: 1.0
+    position: 1.0
+    prior: 1.0
+  static_prior_path: outputs/priors/coco_static_prior.json
+  min_prior_count: 5
+  fallback_prior: dataset_mean
+
+verification:
+  detector: groundingdino
+  evidence_threshold: null
+  deduplicate_objects: true
+  groundingdino:
+    config_path: models/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py
+    checkpoint_path: models/groundingdino_swint_ogc.pth
+    box_threshold: 0.35
+    text_threshold: 0.25
+    query_template: "{object} ."
+    save_boxes: true
+
+revision:
+  strategy: conservative
+  allow_rules:
+    - coordination
+    - simple_existence
+    - simple_with_preposition
+  no_to_yes_for_pope: false
+
+evaluation:
+  tune_on_validation_only: true
+  validation_split:
+    dataset: coco_train2017
+    sample_size: 5000
+    seed: 42
+    split_file: configs/splits/coco_train2017_val5000_seed42.txt

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +14,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from paper_reproduce.evaluation import load_coco_gt_objects
 from paper_reproduce.extraction import ObjectVocabulary, build_extractor
 from paper_reproduce.scoring import compute_static_prior
 from paper_reproduce.utils.config import apply_overrides, load_yaml, resolve_path
@@ -106,26 +106,6 @@ def main() -> None:
     print(f"Hallucinated object mentions: {prior_data['hallucinated_total']}")
     print(f"Mean prior: {prior_data['mean_prior']}")
     print(f"Output: {output_path}")
-
-
-def load_coco_gt_objects(
-    annotation_path: Path, vocabulary: ObjectVocabulary
-) -> dict[str, set[str]]:
-    with annotation_path.open("r", encoding="utf-8-sig") as handle:
-        data = json.load(handle)
-
-    categories = {
-        int(category["id"]): vocabulary.normalize(category["name"]) or str(category["name"]).lower()
-        for category in data.get("categories", [])
-    }
-    gt_by_image: dict[str, set[str]] = defaultdict(set)
-    for annotation in data.get("annotations", []):
-        image_id = str(annotation.get("image_id", ""))
-        category = categories.get(int(annotation["category_id"]))
-        if image_id and category:
-            gt_by_image[image_id].add(category)
-    return dict(gt_by_image)
-
 
 def _resolve_output_path(explicit_output: str | None, config: dict[str, Any]) -> Path:
     if explicit_output:

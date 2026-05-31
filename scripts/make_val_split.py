@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import sys
 from pathlib import Path
-from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -17,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from paper_reproduce.utils.config import resolve_path
 from paper_reproduce.utils.io import ensure_parent, write_json
+from paper_reproduce.datasets.coco_stream import sample_coco_image_ids
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,19 +47,7 @@ def main() -> None:
     if args.sample_size <= 0:
         raise ValueError("--sample-size must be positive")
 
-    with annotation_path.open("r", encoding="utf-8-sig") as handle:
-        data = json.load(handle)
-
-    image_ids = sorted({str(image["id"]) for image in data.get("images", []) if "id" in image})
-    if args.sample_size > len(image_ids):
-        raise ValueError(
-            f"Requested {args.sample_size} images, but annotation file contains {len(image_ids)}"
-        )
-
-    rng = random.Random(args.seed)
-    sampled = list(image_ids)
-    rng.shuffle(sampled)
-    sampled = sorted(sampled[: args.sample_size], key=lambda value: int(value) if value.isdigit() else value)
+    sampled = sample_coco_image_ids(annotation_path, args.sample_size, args.seed)
 
     output_path = ensure_parent(resolve_path(args.output, PROJECT_ROOT))
     if args.format == "txt":
@@ -80,7 +67,6 @@ def main() -> None:
             },
         )
 
-    print(f"Images available: {len(image_ids)}")
     print(f"Images sampled: {len(sampled)}")
     print(f"Seed: {args.seed}")
     print(f"Output: {output_path}")

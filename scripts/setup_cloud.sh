@@ -123,6 +123,7 @@ fi
 
 if [[ "$WITH_MODELS" -eq 1 ]]; then
   run_in_env python -m pip install -r requirements-models-cu12.txt
+  run_in_env python -m pip install -U ninja wheel
 fi
 
 print_check
