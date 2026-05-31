@@ -191,7 +191,8 @@ run_cmd "$PYTHON" scripts/build_static_prior.py \
   --config "$CONFIG" \
   --captions "$captions" \
   --coco-annotations "$ANNOTATIONS" \
-  --output "$prior"
+  --output "$prior" \
+  "${backend_args[@]}"
 
 run_cmd "$PYTHON" scripts/extract_objects.py \
   --config "$CONFIG" \

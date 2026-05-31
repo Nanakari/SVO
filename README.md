@@ -237,8 +237,8 @@ python scripts/run_pope.py --config configs/default.yaml --dataset configs/datas
 # Object extraction and risk scoring
 python scripts/extract_objects.py --config configs/default.yaml --method configs/methods/svo.yaml --input outputs/predictions/coco_chair_base_captions.jsonl
 
-# Static hallucination prior from COCO validation captions
-python scripts/build_static_prior.py --config configs/default.yaml --captions outputs/predictions/coco_train_base_captions.jsonl --coco-annotations data/coco/annotations/instances_train2017.json
+# Validation-only threshold tuning and static prior construction
+bash scripts/tune_svo_threshold.sh --thresholds "0.5 1.0 1.5 2.0"
 
 # GroundingDINO visual verification for SVO-selected objects
 python scripts/verify_objects.py --config configs/default.yaml --method configs/methods/svo.yaml --input outputs/objects/coco_chair_base_captions_objects.jsonl --risk-threshold <VAL_THRESHOLD>

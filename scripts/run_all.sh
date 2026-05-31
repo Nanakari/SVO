@@ -117,6 +117,7 @@ cd "$ROOT_DIR"
 if [[ -z "$STATIC_PRIOR_PATH" ]]; then
   STATIC_PRIOR_PATH="$OUTPUT_DIR/priors/coco_static_prior.json"
 fi
+static_prior_args=(--set "risk_scoring.static_prior_path=$STATIC_PRIOR_PATH")
 
 contains_item() {
   local list="$1"
@@ -228,16 +229,12 @@ extract_coco_objects() {
   local method="$1"
   local captions="$OUTPUT_DIR/predictions/coco_chair_base_captions.jsonl"
   local objects="$OUTPUT_DIR/objects/coco_chair_${method}_objects.jsonl"
-  local prior_args=()
-  if [[ "$BUILD_PRIOR" -eq 1 || "$STATIC_PRIOR_PATH_EXPLICIT" -eq 1 || -f "$STATIC_PRIOR_PATH" ]]; then
-    prior_args=(--set "risk_scoring.static_prior_path=$STATIC_PRIOR_PATH")
-  fi
   run_cmd "$PYTHON" scripts/extract_objects.py \
     --config "$CONFIG" \
     --method "configs/methods/${method}.yaml" \
     --input "$captions" \
     --output "$objects" \
-    "${prior_args[@]}"
+    "${static_prior_args[@]}"
 }
 
 verify_and_revise_coco() {
@@ -366,7 +363,8 @@ run_pope_pipeline() {
       --method configs/methods/svo.yaml \
       --input "$predictions" \
       --text-field question \
-      --output "$objects"
+      --output "$objects" \
+      "${static_prior_args[@]}"
     run_cmd "$PYTHON" scripts/verify_objects.py \
       --config "$CONFIG" \
       --method configs/methods/svo.yaml \
