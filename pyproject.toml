@@ -34,8 +34,8 @@ models = [
     "torch==2.4.1",
     "torchvision==0.19.1",
     "tokenizers==0.22.2",
-    "huggingface-hub==1.17.0",
-    "transformers==5.9.0",
+    "huggingface-hub==0.36.0",
+    "transformers==4.57.1",
 ]
 dev = [
     "pytest>=7.4.0",
