@@ -14,17 +14,22 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from paper_reproduce.evaluation import (
+    OfficialChairMapper,
     amber_object_score,
-    evaluate_chair_records,
+    evaluate_chair_records_internal,
+    evaluate_chair_records_official,
     evaluate_efficiency_records,
     evaluate_false_correction_records,
     evaluate_yes_no_records,
+    load_coco_category_names,
     load_coco_gt_objects,
+    load_coco_gt_objects_official,
 )
 from paper_reproduce.evaluation.common import infer_method, load_records, write_metrics
 from paper_reproduce.extraction import ObjectVocabulary, build_extractor
 from paper_reproduce.utils.config import apply_overrides, deep_merge, load_yaml, resolve_path
 from paper_reproduce.utils.io import ensure_parent
+from paper_reproduce.utils.answers import YES_NO_NORMALIZERS
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,13 +53,29 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--verifications", help="Verification JSONL for efficiency metrics.")
     parser.add_argument("--base-predictions", help="Base caption JSONL for relative latency.")
     parser.add_argument("--coco-annotations", help="Override COCO instances annotation path.")
+    parser.add_argument("--coco-caption-annotations", help="Override COCO caption annotation path.")
     parser.add_argument("--output", help="Output metrics JSON path.")
     parser.add_argument("--method", help="Override method name in metric output.")
     parser.add_argument("--text-field", help="Text field for CHAIR evaluation.")
+    parser.add_argument(
+        "--chair-backend",
+        choices=["official", "internal"],
+        default="official",
+        help="CHAIR scorer backend. Default: official-compatible.",
+    )
     parser.add_argument("--answer-field", default="answer", help="Answer field for yes/no metrics.")
     parser.add_argument("--label-field", default="label", help="Label field for yes/no metrics.")
+    parser.add_argument(
+        "--pope-normalizer",
+        choices=YES_NO_NORMALIZERS,
+        default="official",
+        help="POPE answer normalizer. Default follows the public POPE evaluation script.",
+    )
     parser.add_argument("--group-field", help="Optional grouping field for yes/no metrics.")
-    parser.add_argument("--backend", help="Override object_extraction.backend for evaluation.")
+    parser.add_argument(
+        "--backend",
+        help="Override object_extraction.backend for internal CHAIR and false-correction evaluation.",
+    )
     parser.add_argument(
         "--set",
         dest="overrides",
@@ -111,17 +132,39 @@ def _run_chair(
 ) -> tuple[Path, str, dict[str, Any], dict[str, Any], list[Path]]:
     predictions_path = _required_path(args.predictions, "predictions")
     records = load_records(predictions_path)
-    extractor = build_extractor(config, PROJECT_ROOT)
-    vocabulary = ObjectVocabulary.from_config(config, PROJECT_ROOT)
     annotation_path = _coco_annotation_path(args, dataset_config)
-    gt_by_image = load_coco_gt_objects(annotation_path, vocabulary)
     text_field = args.text_field or _default_caption_text_field(records)
-    metrics, counts = evaluate_chair_records(
-        records, gt_by_image=gt_by_image, extractor=extractor, text_field=text_field
-    )
+    sources = [predictions_path, annotation_path]
+    if args.chair_backend == "official":
+        category_names = load_coco_category_names(annotation_path)
+        mapper = OfficialChairMapper(category_names)
+        caption_annotation_path = _coco_caption_annotation_path(args, dataset_config)
+        if caption_annotation_path is not None:
+            sources.append(caption_annotation_path)
+        gt_by_image = load_coco_gt_objects_official(
+            annotation_path,
+            mapper,
+            caption_annotation_path=caption_annotation_path,
+        )
+        metrics, counts = evaluate_chair_records_official(
+            records,
+            gt_by_image=gt_by_image,
+            mapper=mapper,
+            text_field=text_field,
+        )
+    else:
+        extractor = build_extractor(config, PROJECT_ROOT)
+        vocabulary = ObjectVocabulary.from_config(config, PROJECT_ROOT)
+        gt_by_image = load_coco_gt_objects(annotation_path, vocabulary)
+        metrics, counts = evaluate_chair_records_internal(
+            records,
+            gt_by_image=gt_by_image,
+            extractor=extractor,
+            text_field=text_field,
+        )
     method = args.method or infer_method(records)
     output_path = _default_output_path(args.output, dataset_config, method, "chair")
-    return output_path, method, metrics, counts, [predictions_path, annotation_path]
+    return output_path, method, metrics, counts, sources
 
 
 def _run_false_correction(
@@ -152,6 +195,8 @@ def _run_pope(
         group_field=group_field,
         answer_field=args.answer_field,
         label_field=args.label_field,
+        answer_normalizer=args.pope_normalizer,
+        label_normalizer="strict",
     )
     method = args.method or infer_method(records)
     output_path = _default_output_path(args.output, dataset_config, method, "pope")
@@ -236,6 +281,26 @@ def _coco_annotation_path(args: argparse.Namespace, dataset_config: dict[str, An
     return path
 
 
+def _coco_caption_annotation_path(
+    args: argparse.Namespace, dataset_config: dict[str, Any]
+) -> Path | None:
+    configured = args.coco_caption_annotations or dataset_config.get("paths", {}).get(
+        "caption_annotation_file"
+    )
+    path = resolve_path(configured, PROJECT_ROOT)
+    if path is None:
+        return None
+    if path.exists():
+        return path
+    if args.coco_caption_annotations:
+        raise FileNotFoundError(f"COCO caption annotation file not found: {path}")
+    print(
+        f"Warning: COCO caption annotation file not found; CHAIR GT will use instances only: {path}",
+        file=sys.stderr,
+    )
+    return None
+
+
 def _default_caption_text_field(records: list[dict[str, Any]]) -> str:
     if records and "revised_caption" in records[0]:
         return "revised_caption"
@@ -252,6 +317,11 @@ def _default_output_path(
 
 
 def _notes_for_task(task: str) -> list[str]:
+    if task == "chair":
+        return [
+            "CHAIR defaults to the official-compatible backend; use --chair-backend internal "
+            "only for fallback or sanity checks."
+        ]
     if task == "amber":
         return [
             "AMBER Object Subset uses the generic yes/no object-existence scorer; "

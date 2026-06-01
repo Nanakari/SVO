@@ -159,6 +159,7 @@ All records are JSON Lines unless stated otherwise. Fields may grow as implement
   "original_answer": "yes",
   "revised_answer": "no",
   "answer": "no",
+  "answer_normalizer": "official",
   "action": {
     "action": "yes_to_no",
     "rule": "pope_yes_to_no",
@@ -189,7 +190,11 @@ Metric files should be machine-generated JSON:
     "correct_object_retention": null,
     "false_correction_rate": null
   },
+  "counts": {
+    "chair_backend": "official"
+  },
   "source_files": [],
+  "notes": [],
   "created_at": "ISO-8601 timestamp"
 }
 ```
@@ -198,8 +203,10 @@ Exported tables must read these metric files. Missing metric files should produc
 
 Task-specific metric keys:
 
-- `chair`: `chairs`, `chairi`, `average_length`, `correct_object_coverage`.
+- `chair`: `chairs`, `chairi`, `average_length`, `correct_object_coverage`. Main results should
+  use `counts.chair_backend == "official"`; `internal` is a fallback/sanity backend.
 - `pope`: per-setting and `overall` `accuracy`, `precision`, `recall`, `f1`, `yes_ratio`.
+  Main runs use the public POPE script-style `official` answer normalizer.
 - `amber`: `accuracy`, `precision`, `recall`, `f1`, `yes_ratio`, `amber_object_score`.
 - `efficiency`: `verification_rate`, `external_queries_per_image`, `relative_latency`, latency components.
 - `false_correction`: `hallucinated_object_removal`, `correct_object_retention`, `false_correction_rate`.

@@ -51,14 +51,20 @@ def main() -> None:
     skip_ids = existing_sample_ids(output_path)
 
     samples = load_coco_caption_samples(dataset_config, PROJECT_ROOT, limit=args.limit)
+    pending = [sample for sample in samples if sample.sample_id not in skip_ids]
+    if not pending:
+        print(f"Loaded samples: {len(samples)}")
+        print(f"Skipped existing: {len(skip_ids)}")
+        print("Wrote records: 0")
+        print(f"Output: {output_path}")
+        return
+
     generator = build_generator(config)
     prompt = str(config.get("generation", {}).get("prompt", "Please describe this image in detail."))
     generation_metadata = _generation_metadata(config)
 
     written = 0
-    for sample in samples:
-        if sample.sample_id in skip_ids:
-            continue
+    for sample in pending:
         result = generator.generate(sample.image_path, prompt)
         record = {
             "sample_id": sample.sample_id,

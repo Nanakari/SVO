@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Any, Mapping
 
 from paper_reproduce.evaluation.common import safe_divide
+from paper_reproduce.utils.answers import normalize_yes_no_answer
 
 
 def evaluate_yes_no_records(
@@ -14,11 +15,19 @@ def evaluate_yes_no_records(
     group_field: str | None = None,
     answer_field: str = "answer",
     label_field: str = "label",
+    answer_normalizer: str = "strict",
+    label_normalizer: str = "strict",
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Compute accuracy, precision, recall, F1, and yes ratio."""
 
     if group_field is None:
-        metrics, counts = _evaluate_group(records, answer_field=answer_field, label_field=label_field)
+        metrics, counts = _evaluate_group(
+            records,
+            answer_field=answer_field,
+            label_field=label_field,
+            answer_normalizer=answer_normalizer,
+            label_normalizer=label_normalizer,
+        )
         return metrics, counts
 
     grouped: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
@@ -29,13 +38,21 @@ def evaluate_yes_no_records(
     counts_by_group: dict[str, Any] = {}
     for group_name, group_records in sorted(grouped.items()):
         group_metrics, group_counts = _evaluate_group(
-            group_records, answer_field=answer_field, label_field=label_field
+            group_records,
+            answer_field=answer_field,
+            label_field=label_field,
+            answer_normalizer=answer_normalizer,
+            label_normalizer=label_normalizer,
         )
         metrics_by_group[group_name] = group_metrics
         counts_by_group[group_name] = group_counts
 
     overall_metrics, overall_counts = _evaluate_group(
-        records, answer_field=answer_field, label_field=label_field
+        records,
+        answer_field=answer_field,
+        label_field=label_field,
+        answer_normalizer=answer_normalizer,
+        label_normalizer=label_normalizer,
     )
     metrics_by_group["overall"] = overall_metrics
     counts_by_group["overall"] = overall_counts
@@ -58,11 +75,19 @@ def _evaluate_group(
     *,
     answer_field: str,
     label_field: str,
+    answer_normalizer: str,
+    label_normalizer: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     tp = fp = tn = fn = unknown = 0
     for record in records:
-        pred = _normalise_yes_no(record.get(answer_field) or record.get("revised_answer"))
-        label = _normalise_yes_no(record.get(label_field) or record.get("gt_answer") or record.get("answer_label"))
+        pred = normalize_yes_no_answer(
+            record.get(answer_field) or record.get("revised_answer"),
+            mode=answer_normalizer,
+        )
+        label = normalize_yes_no_answer(
+            record.get(label_field) or record.get("gt_answer") or record.get("answer_label"),
+            mode=label_normalizer,
+        )
         if pred not in {"yes", "no"} or label not in {"yes", "no"}:
             unknown += 1
             continue
@@ -100,12 +125,3 @@ def _evaluate_group(
         "fn": fn,
     }
     return metrics, counts
-
-
-def _normalise_yes_no(value: Any) -> str:
-    lowered = str(value or "").strip().lower()
-    if lowered in {"yes", "y", "true", "1"}:
-        return "yes"
-    if lowered in {"no", "n", "false", "0"}:
-        return "no"
-    return lowered

@@ -11,9 +11,11 @@ GROUNDINGDINO_CHECKPOINT_URL="${GROUNDINGDINO_CHECKPOINT_URL:-https://github.com
 GROUNDINGDINO_CHECKPOINT_HF_REPO="${GROUNDINGDINO_CHECKPOINT_HF_REPO:-ShilongLiu/GroundingDINO}"
 GROUNDINGDINO_CHECKPOINT_HF_FILE="${GROUNDINGDINO_CHECKPOINT_HF_FILE:-groundingdino_swint_ogc.pth}"
 GROUNDINGDINO_CHECKPOINT_SOURCE="${GROUNDINGDINO_CHECKPOINT_SOURCE:-url}"
+GROUNDINGDINO_TEXT_ENCODER_ID="${GROUNDINGDINO_TEXT_ENCODER_ID:-bert-base-uncased}"
 CONFIRM=0
 SKIP_LLAVA=0
 SKIP_GROUNDINGDINO=0
+SKIP_GROUNDINGDINO_TEXT_ENCODER=0
 INSTALL_GROUNDINGDINO=0
 
 usage() {
@@ -29,10 +31,13 @@ Options:
   --groundingdino-source SRC  Checkpoint source: url, hf, or auto. Default: url
   --skip-llava               Do not download LLaVA.
   --skip-groundingdino       Do not clone/download GroundingDINO assets.
-  --install-groundingdino    Run pip install -e on the cloned GroundingDINO repo.
+  --skip-groundingdino-text-encoder
+                              Do not pre-cache bert-base-uncased for GroundingDINO.
+  --install-groundingdino    Run pip install -e --no-deps on the cloned GroundingDINO repo.
   -h, --help                 Show this help.
 
 Environment variables:
+  HF_HOME                    Optional Hugging Face cache root.
   HF_ENDPOINT                Optional Hugging Face endpoint/mirror used by hf download.
   HF_TOKEN                   Optional Hugging Face token used by hf/huggingface-cli.
   GROUNDINGDINO_CHECKPOINT_SOURCE  url, hf, or auto.
@@ -68,6 +73,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_GROUNDINGDINO=1
       shift
       ;;
+    --skip-groundingdino-text-encoder)
+      SKIP_GROUNDINGDINO_TEXT_ENCODER=1
+      shift
+      ;;
     --install-groundingdino)
       INSTALL_GROUNDINGDINO=1
       shift
@@ -101,9 +110,9 @@ download_file() {
   fi
   mkdir -p "$(dirname "$output")"
   if command -v curl >/dev/null 2>&1; then
-    curl -L --fail --continue-at - "$url" -o "$output"
+    curl -L --fail --continue-at - --retry 10 --retry-delay 5 --connect-timeout 30 "$url" -o "$output"
   elif command -v wget >/dev/null 2>&1; then
-    wget -c "$url" -O "$output"
+    wget -c --tries=10 --timeout=30 "$url" -O "$output"
   else
     echo "Neither curl nor wget is available to download $url" >&2
     exit 1
@@ -143,6 +152,24 @@ download_hf_file() {
   rm -rf "$tmp_dir"
 }
 
+download_hf_cached_files() {
+  local repo_id="$1"
+  shift
+  if command -v hf >/dev/null 2>&1; then
+    for filename in "$@"; do
+      hf download "$repo_id" "$filename"
+    done
+  elif command -v huggingface-cli >/dev/null 2>&1; then
+    for filename in "$@"; do
+      huggingface-cli download "$repo_id" "$filename"
+    done
+  else
+    echo "No Hugging Face downloader found. Install huggingface_hub first:" >&2
+    echo "  python -m pip install -U huggingface_hub" >&2
+    exit 1
+  fi
+}
+
 if [[ "$SKIP_LLAVA" -eq 0 ]]; then
   mkdir -p "$LLAVA_DIR"
   echo "Downloading LLaVA model: $LLAVA_ID"
@@ -154,6 +181,9 @@ if [[ "$SKIP_GROUNDINGDINO" -eq 0 ]]; then
     echo "GroundingDINO repo exists: $GROUNDINGDINO_REPO_DIR"
   else
     git clone https://github.com/IDEA-Research/GroundingDINO.git "$GROUNDINGDINO_REPO_DIR"
+  fi
+  if git -C "$GROUNDINGDINO_REPO_DIR" rev-parse --short HEAD >/dev/null 2>&1; then
+    echo "GroundingDINO commit: $(git -C "$GROUNDINGDINO_REPO_DIR" rev-parse HEAD)"
   fi
   case "$GROUNDINGDINO_CHECKPOINT_SOURCE" in
     url)
@@ -174,7 +204,16 @@ if [[ "$SKIP_GROUNDINGDINO" -eq 0 ]]; then
       ;;
   esac
   if [[ "$INSTALL_GROUNDINGDINO" -eq 1 ]]; then
-    python -m pip install -e "$GROUNDINGDINO_REPO_DIR" --no-build-isolation
+    python -m pip install -e "$GROUNDINGDINO_REPO_DIR" --no-build-isolation --no-deps
+  fi
+  if [[ "$SKIP_GROUNDINGDINO_TEXT_ENCODER" -eq 0 ]]; then
+    echo "Pre-caching GroundingDINO text encoder: $GROUNDINGDINO_TEXT_ENCODER_ID"
+    download_hf_cached_files "$GROUNDINGDINO_TEXT_ENCODER_ID" \
+      config.json \
+      tokenizer.json \
+      tokenizer_config.json \
+      vocab.txt \
+      model.safetensors
   fi
 fi
 

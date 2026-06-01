@@ -10,6 +10,7 @@ paths:
 
 inference:
   answer_format: yes_no
+  answer_normalizer: official
   revise_yes_to_no_only: true
   prompt_template: "{question}\nAnswer the question using only Yes or No."
 

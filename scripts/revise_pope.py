@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from paper_reproduce.revision import revise_pope_answer
+from paper_reproduce.utils.answers import YES_NO_NORMALIZERS
 from paper_reproduce.utils.config import apply_overrides, load_yaml, resolve_path
 from paper_reproduce.utils.io import append_jsonl, ensure_parent, existing_sample_ids, read_jsonl
 
@@ -28,6 +29,11 @@ def parse_args() -> argparse.Namespace:
         "--allow-no-to-yes",
         action="store_true",
         help="Enable No-to-Yes correction. Off by default for the SVO protocol.",
+    )
+    parser.add_argument(
+        "--answer-normalizer",
+        choices=YES_NO_NORMALIZERS,
+        help="Normalize POPE raw responses before revision. Default: config or official.",
     )
     parser.add_argument(
         "--overwrite",
@@ -60,6 +66,9 @@ def main() -> None:
 
     verifications = _load_by_sample_id(verifications_path)
     no_to_yes = bool(args.allow_no_to_yes or config.get("revision", {}).get("no_to_yes_for_pope", False))
+    answer_normalizer = str(
+        args.answer_normalizer or config.get("revision", {}).get("pope_answer_normalizer") or "official"
+    )
 
     read_count = 0
     written = 0
@@ -72,7 +81,12 @@ def main() -> None:
 
         verification = verifications.get(sample_id)
         missing_verifications += int(verification is None)
-        revised = revise_pope_answer(prediction, verification, no_to_yes=no_to_yes)
+        revised = revise_pope_answer(
+            prediction,
+            verification,
+            no_to_yes=no_to_yes,
+            answer_normalizer=answer_normalizer,
+        )
         changed += int(revised["original_answer"] != revised["revised_answer"])
 
         output_record: dict[str, Any] = dict(prediction)
@@ -87,6 +101,7 @@ def main() -> None:
                 "revision": {
                     "strategy": "pope_yes_to_no",
                     "no_to_yes_enabled": no_to_yes,
+                    "answer_normalizer": answer_normalizer,
                 },
                 "source_prediction_file": str(predictions_path),
                 "source_verification_file": str(verifications_path),

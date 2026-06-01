@@ -37,8 +37,8 @@
 
 | Dataset | Script Task | Metrics |
 | --- | --- | --- |
-| COCO/CHAIR | `evaluate.py --task chair` | CHAIRs, CHAIRi, average length, correct object coverage |
-| POPE | `evaluate.py --task pope` | accuracy, precision, recall, F1, yes ratio |
+| COCO/CHAIR | `evaluate.py --task chair --chair-backend official` | CHAIRs, CHAIRi, average length, correct object coverage |
+| POPE | `evaluate.py --task pope --pope-normalizer official` | accuracy, precision, recall, F1, yes ratio |
 | AMBER Object Subset | `evaluate.py --task amber` | object-existence yes/no metrics |
 | Efficiency | `evaluate.py --task efficiency` | verification rate, external queries/image, relative latency |
 | False Correction | `evaluate.py --task false_correction` | hallucinated removal, correct retention, false correction rate |

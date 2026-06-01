@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--objects", required=True, help="Object JSONL from extract_objects.py.")
     parser.add_argument("--base-predictions", help="Base caption JSONL for relative latency.")
     parser.add_argument("--coco-annotations", help="Override COCO instances annotation path.")
+    parser.add_argument("--coco-caption-annotations", help="Optional COCO captions annotation path.")
     parser.add_argument("--output-dir", default="outputs/sweeps/risk_threshold", help="Sweep output directory.")
     parser.add_argument("--thresholds", nargs="+", type=float, help="Explicit risk thresholds to run.")
     parser.add_argument("--start", type=float, help="Start of threshold range, inclusive.")
@@ -205,6 +206,8 @@ def _threshold_values(args: argparse.Namespace) -> list[float]:
 def _add_optional_eval_args(command: list[str], args: argparse.Namespace) -> None:
     if args.coco_annotations:
         command.extend(["--coco-annotations", args.coco_annotations])
+    if args.coco_caption_annotations:
+        command.extend(["--coco-caption-annotations", args.coco_caption_annotations])
     if args.backend:
         command.extend(["--backend", args.backend])
 

@@ -13,6 +13,8 @@ data/
     annotations/
       instances_train2017.json
       instances_val2014.json
+      captions_train2017.json
+      captions_val2014.json
   pope/
     random.jsonl
     popular.jsonl
@@ -40,7 +42,11 @@ bash scripts/prepare_data.sh --download-coco-required --confirm
 Prepare the default 5000-image train2017 validation subset:
 
 ```bash
-bash scripts/prepare_data.sh --prepare-train2017-subset --subset-size 5000 --confirm
+bash scripts/prepare_data.sh \
+  --prepare-train2017-subset \
+  --subset-size 5000 \
+  --download-missing-subset \
+  --confirm
 ```
 
 If a full `data/coco/train2017/` directory already exists, the subset script copies from it. If it
@@ -49,6 +55,10 @@ does not exist, add `--download-missing-subset --confirm` to download only the s
 The split and subset scripts stream the COCO JSON arrays instead of loading the full
 `instances_train2017.json` into memory. This keeps preparation usable on small cgroup memory limits
 while still producing the same deterministic split.
+
+`captions_val2014.json` and `captions_train2017.json` are used by the official-compatible CHAIR
+backend to mirror the original image-level ground-truth construction. If they are absent, CHAIR can
+fall back to instance annotations only, but main results should keep the caption annotations.
 
 If you store COCO elsewhere, update `configs/datasets/coco_chair.yaml` and
 `configs/datasets/pope.yaml`.
@@ -66,6 +76,9 @@ data/pope/adversarial.jsonl
 The loader expects each record to contain enough information for image path, question, and label.
 Use `scripts/run_pope.py --help` and `src/paper_reproduce/datasets/pope.py` to inspect accepted
 field aliases.
+
+Generated POPE answers and POPE evaluation default to the public POPE script-style `official`
+answer normalizer. This keeps free-form responses comparable with common POPE reporting.
 
 ## AMBER Object Subset
 

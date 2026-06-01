@@ -39,6 +39,22 @@ Download/clone assets:
 bash scripts/download_models.sh --confirm --skip-llava --install-groundingdino
 ```
 
+The script prints the cloned GroundingDINO commit SHA. Save that SHA with the experiment log so
+the detector code revision is traceable.
+
+GroundingDINO also needs its BERT text encoder. By default `scripts/download_models.sh` pre-caches
+these `bert-base-uncased` files in `HF_HOME`:
+
+- `config.json`
+- `tokenizer.json`
+- `tokenizer_config.json`
+- `vocab.txt`
+- `model.safetensors`
+
+It intentionally does not require `special_tokens_map.json`, because that file is not present for
+all Hugging Face snapshots. Use `--skip-groundingdino-text-encoder` only if the cache is already
+prepared or the host can download from Hugging Face during setup.
+
 If the GitHub release download is slow from your cloud region, use the Hugging Face mirror/source
 path:
 
@@ -58,8 +74,14 @@ Install the package after the CUDA-compatible PyTorch stack is already installed
 ```bash
 python -m pip install -r requirements-models-cu12.txt
 python -m pip install -U ninja wheel
-python -m pip install -e models/GroundingDINO --no-build-isolation
+python -m pip uninstall -y groundingdino || true
+rm -rf models/GroundingDINO/build
+find models/GroundingDINO/groundingdino -name '*.so' -type f -delete
+python -m pip install -e models/GroundingDINO --no-build-isolation --no-deps
 ```
+
+Rebuild the extension after changing torch or CUDA. Reusing an old `.so` after a torch upgrade is a
+common source of import-time crashes.
 
 ## Reserved Methods
 

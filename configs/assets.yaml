@@ -15,12 +15,25 @@ assets:
     required_for:
       - verify_objects.py
 
+  groundingdino_text_encoder:
+    model_id: bert-base-uncased
+    hf_files:
+      - config.json
+      - tokenizer.json
+      - tokenizer_config.json
+      - vocab.txt
+      - model.safetensors
+    required_for:
+      - verify_objects.py
+
 datasets:
   coco_chair:
     image_root: data/coco/val2014
     annotation_file: data/coco/annotations/instances_val2014.json
+    caption_annotation_file: data/coco/annotations/captions_val2014.json
     validation_image_root: data/coco/train2017_val5000
     validation_annotation_file: data/coco/annotations/instances_train2017.json
+    validation_caption_annotation_file: data/coco/annotations/captions_train2017.json
     validation_split_file: configs/splits/coco_train2017_val5000_seed42.txt
   pope:
     image_root: data/coco/val2014

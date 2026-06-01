@@ -53,6 +53,7 @@ revision:
     - simple_existence
     - simple_with_preposition
   no_to_yes_for_pope: false
+  pope_answer_normalizer: official
 
 evaluation:
   tune_on_validation_only: true

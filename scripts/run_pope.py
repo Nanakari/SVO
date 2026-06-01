@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,6 +19,7 @@ from paper_reproduce.utils.cli import add_common_config_args, load_cli_config, p
 from paper_reproduce.utils.config import resolve_path
 from paper_reproduce.utils.io import append_jsonl, ensure_parent, existing_sample_ids
 from paper_reproduce.utils.reproducibility import set_seed
+from paper_reproduce.utils.answers import YES_NO_NORMALIZERS, normalize_yes_no_answer
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,6 +40,11 @@ def parse_args() -> argparse.Namespace:
         "--overwrite",
         action="store_true",
         help="Replace the output file instead of resuming from existing sample_ids.",
+    )
+    parser.add_argument(
+        "--answer-normalizer",
+        choices=YES_NO_NORMALIZERS,
+        help="Normalize raw model answers before writing JSONL. Default: dataset config or official.",
     )
     return parser.parse_args()
 
@@ -64,6 +69,14 @@ def main() -> None:
         settings=args.settings,
         limit_per_setting=args.limit_per_setting,
     )
+    pending = [sample for sample in samples if sample.sample_id not in skip_ids]
+    if not pending:
+        print(f"Loaded samples: {len(samples)}")
+        print(f"Skipped existing: {len(skip_ids)}")
+        print("Wrote records: 0")
+        print(f"Output: {output_path}")
+        return
+
     generator = build_generator(config)
     prompt_template = str(
         dataset_config.get("inference", {}).get(
@@ -71,12 +84,15 @@ def main() -> None:
             "{question}\nAnswer the question using only Yes or No.",
         )
     )
+    answer_normalizer = str(
+        args.answer_normalizer
+        or dataset_config.get("inference", {}).get("answer_normalizer")
+        or "official"
+    )
     generation_metadata = _generation_metadata(config)
 
     written = 0
-    for sample in samples:
-        if sample.sample_id in skip_ids:
-            continue
+    for sample in pending:
         prompt = prompt_template.format(question=sample.question)
         result = generator.generate(sample.image_path, prompt)
         record = {
@@ -89,7 +105,8 @@ def main() -> None:
             "question": sample.question,
             "prompt": prompt,
             "raw_response": result.text,
-            "answer": normalise_yes_no(result.text),
+            "answer": normalize_yes_no_answer(result.text, mode=answer_normalizer),
+            "answer_normalizer": answer_normalizer,
             "label": sample.label,
             "generation": generation_metadata,
             "token_scores": result.token_scores,
@@ -103,15 +120,6 @@ def main() -> None:
     print(f"Skipped existing: {len(skip_ids)}")
     print(f"Wrote records: {written}")
     print(f"Output: {output_path}")
-
-
-def normalise_yes_no(text: str) -> str:
-    """Map generated text to yes/no/unknown without changing the raw response."""
-
-    match = re.search(r"\b(yes|no)\b", text.strip(), flags=re.IGNORECASE)
-    if not match:
-        return "unknown"
-    return match.group(1).lower()
 
 
 def _default_output_path(

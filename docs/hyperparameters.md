@@ -54,6 +54,7 @@ python scripts/sweep_detector_thresholds.py \
   --box-thresholds 0.25 0.35 0.45 \
   --text-thresholds 0.20 0.25 0.30 \
   --coco-annotations data/coco/annotations/instances_train2017.json \
+  --coco-caption-annotations data/coco/annotations/captions_train2017.json \
   --output-dir outputs/validation/sweeps/detector_thresholds
 ```
 

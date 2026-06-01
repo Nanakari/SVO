@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from paper_reproduce.utils.answers import normalize_yes_no_answer
+
 
 def revise_pope_answer(
     prediction: Mapping[str, Any],
     verification: Mapping[str, Any] | None,
     *,
     no_to_yes: bool = False,
+    answer_normalizer: str = "official",
 ) -> dict[str, Any]:
     """Revise POPE answers according to the SVO protocol.
 
@@ -17,8 +20,8 @@ def revise_pope_answer(
     No-to-Yes revision stays disabled unless explicitly requested, matching the experiment plan.
     """
 
-    raw_answer = str(prediction.get("answer") or prediction.get("raw_response") or "").strip().lower()
-    revised_answer = raw_answer if raw_answer in {"yes", "no"} else "unknown"
+    raw_answer = str(prediction.get("raw_response") or prediction.get("answer") or "").strip()
+    revised_answer = normalize_yes_no_answer(raw_answer, mode=answer_normalizer)
     action = {
         "action": "keep",
         "rule": "pope_yes_to_no",

@@ -8,12 +8,14 @@ OUTPUT_DIR="${OUTPUT_DIR:-outputs/validation}"
 SAMPLE_SIZE="${SAMPLE_SIZE:-5000}"
 SEED="${SEED:-42}"
 ANNOTATIONS="data/coco/annotations/instances_train2017.json"
+CAPTION_ANNOTATIONS="${CAPTION_ANNOTATIONS:-data/coco/annotations/captions_train2017.json}"
 SPLIT_FILE=""
 IMAGE_ROOT=""
 BACKEND=""
 LIMIT=""
 DRY_RUN=0
 OVERWRITE=0
+SWEEP_ONLY=0
 THRESHOLDS=(0.5 1.0 1.5 2.0)
 
 usage() {
@@ -30,12 +32,15 @@ Options:
   --sample-size N           Validation split size. Default: 5000
   --seed N                  Validation split seed. Default: 42
   --annotations PATH        COCO train2017 instances JSON.
+  --caption-annotations PATH
+                            Optional COCO train2017 captions JSON for CHAIR-compatible GT.
   --split-file PATH         Validation split file.
   --image-root DIR          train2017 subset/full image root.
   --thresholds "A B C"      Space- or comma-separated risk thresholds.
   --limit N                 Debug limit for captions and verification records.
   --backend NAME            Object extraction backend for evaluation, e.g. rule.
   --overwrite               Overwrite per-step JSONL outputs where supported.
+  --sweep-only              Reuse existing captions/prior/objects and only run threshold sweep.
   --gpu IDS                 Export CUDA_VISIBLE_DEVICES.
   -h, --help                Show this help.
 
@@ -73,6 +78,10 @@ while [[ $# -gt 0 ]]; do
       ANNOTATIONS="$2"
       shift 2
       ;;
+    --caption-annotations)
+      CAPTION_ANNOTATIONS="$2"
+      shift 2
+      ;;
     --split-file)
       SPLIT_FILE="$2"
       shift 2
@@ -95,6 +104,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --overwrite)
       OVERWRITE=1
+      shift
+      ;;
+    --sweep-only)
+      SWEEP_ONLY=1
       shift
       ;;
     --gpu)
@@ -165,43 +178,59 @@ if [[ "$OVERWRITE" -eq 1 ]]; then
   overwrite_args=(--overwrite)
 fi
 
+chair_caption_args=()
+if [[ -n "$CAPTION_ANNOTATIONS" && -f "$CAPTION_ANNOTATIONS" ]]; then
+  chair_caption_args=(--coco-caption-annotations "$CAPTION_ANNOTATIONS")
+elif [[ -n "$CAPTION_ANNOTATIONS" ]]; then
+  echo "Warning: COCO caption annotations not found: $CAPTION_ANNOTATIONS; CHAIR will use instance annotations only." >&2
+fi
+
 captions="$OUTPUT_DIR/predictions/coco_train2017_val${SAMPLE_SIZE}_base_captions.jsonl"
 prior="$OUTPUT_DIR/priors/coco_static_prior.json"
 objects="$OUTPUT_DIR/objects/coco_train2017_val${SAMPLE_SIZE}_svo_objects.jsonl"
 sweep_output="$OUTPUT_DIR/sweeps/risk_threshold"
 
-run_cmd "$PYTHON" scripts/make_val_split.py \
-  --coco-annotations "$ANNOTATIONS" \
-  --sample-size "$SAMPLE_SIZE" \
-  --seed "$SEED" \
-  --output "$SPLIT_FILE"
+if [[ "$SWEEP_ONLY" -eq 0 ]]; then
+  run_cmd "$PYTHON" scripts/make_val_split.py \
+    --coco-annotations "$ANNOTATIONS" \
+    --sample-size "$SAMPLE_SIZE" \
+    --seed "$SEED" \
+    --output "$SPLIT_FILE"
 
-run_cmd "$PYTHON" scripts/run_caption.py \
-  --config "$CONFIG" \
-  --dataset configs/datasets/coco_chair.yaml \
-  --method configs/methods/base.yaml \
-  --output "$captions" \
-  --set "dataset.paths.image_root=$IMAGE_ROOT" \
-  --set "dataset.paths.annotation_file=$ANNOTATIONS" \
-  --set "dataset.paths.split_file=$SPLIT_FILE" \
-  "${limit_args[@]}" \
-  "${overwrite_args[@]}"
+  run_cmd "$PYTHON" scripts/run_caption.py \
+    --config "$CONFIG" \
+    --dataset configs/datasets/coco_chair.yaml \
+    --method configs/methods/base.yaml \
+    --output "$captions" \
+    --set "dataset.paths.image_root=$IMAGE_ROOT" \
+    --set "dataset.paths.annotation_file=$ANNOTATIONS" \
+    --set "dataset.paths.split_file=$SPLIT_FILE" \
+    "${limit_args[@]}" \
+    "${overwrite_args[@]}"
 
-run_cmd "$PYTHON" scripts/build_static_prior.py \
-  --config "$CONFIG" \
-  --captions "$captions" \
-  --coco-annotations "$ANNOTATIONS" \
-  --output "$prior" \
-  "${backend_args[@]}"
+  run_cmd "$PYTHON" scripts/build_static_prior.py \
+    --config "$CONFIG" \
+    --captions "$captions" \
+    --coco-annotations "$ANNOTATIONS" \
+    --output "$prior" \
+    "${backend_args[@]}"
 
-run_cmd "$PYTHON" scripts/extract_objects.py \
-  --config "$CONFIG" \
-  --method configs/methods/svo.yaml \
-  --input "$captions" \
-  --output "$objects" \
-  --set "risk_scoring.static_prior_path=$prior" \
-  "${backend_args[@]}" \
-  "${overwrite_args[@]}"
+  run_cmd "$PYTHON" scripts/extract_objects.py \
+    --config "$CONFIG" \
+    --method configs/methods/svo.yaml \
+    --input "$captions" \
+    --output "$objects" \
+    --set "risk_scoring.static_prior_path=$prior" \
+    "${backend_args[@]}" \
+    "${overwrite_args[@]}"
+else
+  for required in "$captions" "$prior" "$objects"; do
+    if [[ ! -f "$required" ]]; then
+      echo "--sweep-only requires existing file: $required" >&2
+      exit 1
+    fi
+  done
+fi
 
 run_cmd "$PYTHON" scripts/sweep_thresholds.py \
   --config "$CONFIG" \
@@ -210,6 +239,7 @@ run_cmd "$PYTHON" scripts/sweep_thresholds.py \
   --objects "$objects" \
   --base-predictions "$captions" \
   --coco-annotations "$ANNOTATIONS" \
+  "${chair_caption_args[@]}" \
   --output-dir "$sweep_output" \
   --thresholds "${THRESHOLDS[@]}" \
   "${backend_args[@]}" \
