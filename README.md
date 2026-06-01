@@ -35,7 +35,7 @@ bash scripts/download_models.sh --confirm
 bash scripts/prepare_data.sh --download-coco-required --confirm
 bash scripts/prepare_data.sh \
   --prepare-train2017-subset \
-  --subset-size 5000 \
+  --subset-size 2000 \
   --download-missing-subset \
   --confirm
 ```
@@ -54,8 +54,8 @@ Expected COCO assets:
 - `data/coco/annotations/captions_val2014.json`
 - `data/coco/annotations/instances_train2017.json`
 - `data/coco/annotations/captions_train2017.json`
-- `data/coco/train2017_val5000/`
-- `configs/splits/coco_train2017_val5000_seed42.txt`
+- `data/coco/train2017_val2000/`
+- `configs/splits/coco_train2017_val2000_seed42.txt`
 
 COCO-only asset check:
 
@@ -87,13 +87,14 @@ Verified cloud combination:
 NVIDIA drivers may report a newer CUDA runtime in `nvidia-smi`; GroundingDINO compilation should
 still follow `/usr/local/cuda/bin/nvcc`. Do not automatically upgrade to cu13 wheels.
 
-`requirements-lock-cu121.txt` is a reference lock for the tested CUDA 12.1 cloud stack. Keep
-`requirements-models-cu12.txt` as the default install entry unless you intentionally need the
-stricter reference file.
+`requirements-lock-cu121.txt` is a reference lock for the tested CUDA 12.1 experiment stack. Run
+`python scripts/check_environment.py --lock requirements-lock-cu121.txt` after installing the model
+stack to catch version drift, broken package requirements, CUDA visibility issues, and missing
+offline `bert-base-uncased` cache entries.
 
 ## Run Experiments
 
-Tune the SVO risk threshold on the validation-only COCO train2017 subset:
+Tune the SVO risk threshold on the validation-only 2000-image COCO train2017 subset:
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
@@ -118,10 +119,13 @@ Run the main COCO/POPE workflow after selecting a validation threshold:
 bash scripts/run_all.sh \
   --config configs/default_autodl.yaml \
   --datasets coco_chair,pope \
-  --methods base,svo,verify_all,random_verify \
+  --methods base,svo \
   --risk-threshold <VAL_THRESHOLD> \
   --gpu 0
 ```
+
+COCO/CHAIR main runs use a fixed 5000-image val2014 split by default. Pass
+`--full-dataset` only when you intentionally want to run the full COCO/CHAIR val2014 set.
 
 AutoDL/SeeTaCloud helper:
 
@@ -136,6 +140,8 @@ SVO_RISK_THRESHOLD=<VAL_THRESHOLD> bash scripts/run_coco_main_autodl.sh --main-o
 
 Caption and POPE generation check the first 100 pending image paths before loading LLaVA. Use
 `--check-images all` for full preflight or `--check-images none` to disable the check.
+For real GroundingDINO verification runs, prefer setting
+`HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1` after the model caches have been prepared.
 
 ## Evaluation
 

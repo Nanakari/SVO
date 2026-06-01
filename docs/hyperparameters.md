@@ -17,7 +17,7 @@ be reported separately and selected only from validation data.
 | Caption revision rules | conservative local edits | Prevents broad false corrections | Fixed |
 
 The default protocol intentionally avoids searching over many knobs. This makes the comparison
-between Base, Verify-All, Random-Verify, and SVO easier to audit.
+between Base and SVO easier to audit.
 
 ## What Should Be Tuned
 
@@ -27,7 +27,7 @@ SVO tradeoff:
 - lower threshold: more objects verified, higher cost, usually fewer missed hallucinations;
 - higher threshold: fewer objects verified, lower cost, usually fewer corrections.
 
-Choose this value on the COCO train2017 random 5000-image validation split, then freeze it before
+Choose this value on the COCO train2017 random 2000-image validation split, then freeze it before
 running the final test metrics.
 
 ## Optional Sensitivity Analysis
@@ -48,8 +48,8 @@ GroundingDINO threshold sweep:
 
 ```bash
 python scripts/sweep_detector_thresholds.py \
-  --objects outputs/validation/objects/coco_train2017_val5000_svo_objects.jsonl \
-  --base-predictions outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl \
+  --objects outputs/validation/objects/coco_train2017_val2000_svo_objects.jsonl \
+  --base-predictions outputs/validation/predictions/coco_train2017_val2000_base_captions.jsonl \
   --risk-threshold <VAL_THRESHOLD> \
   --box-thresholds 0.25 0.35 0.45 \
   --text-thresholds 0.20 0.25 0.30 \

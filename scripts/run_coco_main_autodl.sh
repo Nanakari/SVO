@@ -12,11 +12,15 @@ export PIP_CACHE_DIR="${PIP_CACHE_DIR:-/root/autodl-tmp/pip_cache}"
 CONFIG="${CONFIG:-configs/default_autodl.yaml}"
 GPU="${GPU:-0}"
 THRESHOLDS="${THRESHOLDS:-0.5 1.0 1.5 2.0}"
+MAIN_SAMPLE_SIZE="${MAIN_SAMPLE_SIZE:-5000}"
+MAIN_SAMPLE_SEED="${MAIN_SAMPLE_SEED:-42}"
+MAIN_SPLIT_FILE="${MAIN_SPLIT_FILE:-}"
+FULL_DATASET="${FULL_DATASET:-0}"
 MODE="full"
 
 usage() {
   cat <<'EOF'
-Usage: bash scripts/run_coco_main_autodl.sh [--dry-run|--tune-only|--main-only]
+Usage: bash scripts/run_coco_main_autodl.sh [--dry-run|--tune-only|--main-only] [--full-dataset]
 
 AutoDL/SeeTaCloud helper for the COCO SVO workflow.
 
@@ -29,6 +33,10 @@ Environment:
   CONFIG              Global config path. Default: configs/default_autodl.yaml
   GPU                 CUDA_VISIBLE_DEVICES value. Default: 0
   THRESHOLDS          Validation thresholds. Default: "0.5 1.0 1.5 2.0"
+  MAIN_SAMPLE_SIZE    COCO/CHAIR main split size. Default: 5000
+  MAIN_SAMPLE_SEED    COCO/CHAIR main split seed. Default: 42
+  MAIN_SPLIT_FILE     Optional COCO/CHAIR main split file.
+  FULL_DATASET        Set to 1 to run full COCO/CHAIR instead of the main split.
   SVO_RISK_THRESHOLD  Frozen validation-selected threshold for --main-only/full main run.
 EOF
 }
@@ -45,6 +53,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --main-only)
       MODE="main-only"
+      shift
+      ;;
+    --full-dataset)
+      FULL_DATASET=1
       shift
       ;;
     -h|--help)
@@ -84,10 +96,18 @@ MSG
     scripts/run_all.sh
     --config "$CONFIG"
     --datasets coco_chair
-    --methods base,svo,verify_all,random_verify
+    --methods base,svo
     --risk-threshold "$threshold"
+    --main-sample-size "$MAIN_SAMPLE_SIZE"
+    --main-sample-seed "$MAIN_SAMPLE_SEED"
     --gpu "$GPU"
   )
+  if [[ -n "$MAIN_SPLIT_FILE" ]]; then
+    args+=(--main-split-file "$MAIN_SPLIT_FILE")
+  fi
+  if [[ "$FULL_DATASET" -eq 1 ]]; then
+    args+=(--full-dataset)
+  fi
   if [[ "$MODE" == "dry-run" ]]; then
     args+=(--dry-run)
   fi

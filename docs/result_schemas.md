@@ -63,7 +63,7 @@ All records are JSON Lines unless stated otherwise. Fields may grow as implement
 
 ```json
 {
-  "source_captions": "outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl",
+  "source_captions": "outputs/validation/predictions/coco_train2017_val2000_base_captions.jsonl",
   "coco_annotation_file": "data/coco/annotations/instances_train2017.json",
   "min_count": 5,
   "epsilon": 1e-6,

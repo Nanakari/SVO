@@ -6,16 +6,20 @@ PYTHON="${PYTHON:-python}"
 CONFIG="configs/default.yaml"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs}"
 DATASETS="coco_chair,pope"
-METHODS="base,svo,verify_all,random_verify"
+METHODS="base,svo"
 RISK_THRESHOLD="${RISK_THRESHOLD:-}"
 LIMIT="${LIMIT:-}"
 PRIOR_LIMIT="${PRIOR_LIMIT:-5000}"
 PRIOR_SPLIT_FILE="${PRIOR_SPLIT_FILE:-}"
 PRIOR_IMAGE_ROOT="${PRIOR_IMAGE_ROOT:-}"
+MAIN_SAMPLE_SIZE="${MAIN_SAMPLE_SIZE:-5000}"
+MAIN_SAMPLE_SEED="${MAIN_SAMPLE_SEED:-42}"
+MAIN_SPLIT_FILE="${MAIN_SPLIT_FILE:-}"
 STATIC_PRIOR_PATH="${STATIC_PRIOR_PATH:-}"
 STATIC_PRIOR_PATH_EXPLICIT=0
 BUILD_PRIOR=1
 FORCE_PRIOR=0
+FULL_DATASET="${FULL_DATASET:-0}"
 DRY_RUN=0
 
 usage() {
@@ -30,20 +34,30 @@ Options:
   --output-dir DIR          Output root. Default: outputs
   --datasets LIST           Comma list: coco_chair,pope,amber_object,all. Default: coco_chair,pope
   --methods LIST            Comma list: base,svo,verify_all,random_verify,ablations,components,all.
+                            Default: base,svo
   --risk-threshold FLOAT    SVO risk threshold. Required for real SVO verification unless config sets it.
   --limit N                 Limit caption/POPE inference for debugging.
+  --main-sample-size N      COCO/CHAIR main split size. Default: 5000
+  --main-sample-seed N      COCO/CHAIR main split seed. Default: 42
+  --main-split-file PATH    COCO/CHAIR main split file. Default:
+                            configs/splits/coco_val2014_main<N>_seed<SEED>.txt
   --prior-limit N           COCO train2017 images for static prior captions. Default: 5000
   --prior-split-file PATH   Split file for validation/static-prior captions.
   --prior-image-root DIR    Image root for validation/static-prior captions.
   --static-prior-path PATH  Static prior JSON used during object risk scoring.
   --skip-prior              Do not build the COCO static prior.
   --force-prior             Rebuild the static prior even if the output file already exists.
+  --full-dataset            Run the full COCO/CHAIR dataset instead of a fixed main split.
   --gpu IDS                 Export CUDA_VISIBLE_DEVICES.
   -h, --help                Show this help.
 
 Optional environment variables:
   AMBER_PREDICTIONS         JSONL file for AMBER Object Subset evaluation.
   PYTHON                    Python executable. Default: python
+  MAIN_SAMPLE_SIZE          COCO/CHAIR main split size. Default: 5000
+  MAIN_SAMPLE_SEED          COCO/CHAIR main split seed. Default: 42
+  MAIN_SPLIT_FILE           COCO/CHAIR main split file.
+  FULL_DATASET              Set to 1 to run full COCO/CHAIR.
 EOF
 }
 
@@ -77,6 +91,18 @@ while [[ $# -gt 0 ]]; do
       LIMIT="$2"
       shift 2
       ;;
+    --main-sample-size)
+      MAIN_SAMPLE_SIZE="$2"
+      shift 2
+      ;;
+    --main-sample-seed)
+      MAIN_SAMPLE_SEED="$2"
+      shift 2
+      ;;
+    --main-split-file)
+      MAIN_SPLIT_FILE="$2"
+      shift 2
+      ;;
     --prior-limit)
       PRIOR_LIMIT="$2"
       shift 2
@@ -102,6 +128,10 @@ while [[ $# -gt 0 ]]; do
       FORCE_PRIOR=1
       shift
       ;;
+    --full-dataset)
+      FULL_DATASET=1
+      shift
+      ;;
     --gpu)
       export CUDA_VISIBLE_DEVICES="$2"
       shift 2
@@ -124,6 +154,11 @@ if [[ -z "$STATIC_PRIOR_PATH" ]]; then
   STATIC_PRIOR_PATH="$OUTPUT_DIR/priors/coco_static_prior.json"
 fi
 static_prior_args=(--set "risk_scoring.static_prior_path=$STATIC_PRIOR_PATH")
+
+if [[ -z "$MAIN_SPLIT_FILE" ]]; then
+  MAIN_SPLIT_FILE="configs/splits/coco_val2014_main${MAIN_SAMPLE_SIZE}_seed${MAIN_SAMPLE_SEED}.txt"
+fi
+coco_main_split_args=()
 
 contains_item() {
   local list="$1"
@@ -249,6 +284,24 @@ run_static_prior() {
     --output "$STATIC_PRIOR_PATH"
 }
 
+prepare_coco_main_split() {
+  coco_main_split_args=()
+  if [[ "$FULL_DATASET" -eq 1 ]]; then
+    echo "Using full COCO/CHAIR dataset; no main split will be applied."
+    return
+  fi
+  if [[ "$DRY_RUN" -eq 1 || ! -f "$MAIN_SPLIT_FILE" ]]; then
+    run_cmd "$PYTHON" scripts/make_val_split.py \
+      --coco-annotations data/coco/annotations/instances_val2014.json \
+      --sample-size "$MAIN_SAMPLE_SIZE" \
+      --seed "$MAIN_SAMPLE_SEED" \
+      --output "$MAIN_SPLIT_FILE"
+  else
+    echo "Main COCO/CHAIR split already exists, reusing: $MAIN_SPLIT_FILE"
+  fi
+  coco_main_split_args=(--set "dataset.paths.split_file=$MAIN_SPLIT_FILE")
+}
+
 generate_coco_base_captions() {
   local captions="$OUTPUT_DIR/predictions/coco_chair_base_captions.jsonl"
   run_cmd "$PYTHON" scripts/run_caption.py \
@@ -256,6 +309,7 @@ generate_coco_base_captions() {
     --dataset configs/datasets/coco_chair.yaml \
     --method configs/methods/base.yaml \
     --output "$captions" \
+    "${coco_main_split_args[@]}" \
     "${limit_args[@]}"
 }
 
@@ -340,6 +394,7 @@ run_coco_methods() {
   if [[ "$BUILD_PRIOR" -eq 1 ]]; then
     run_static_prior
   fi
+  prepare_coco_main_split
   if method_enabled "base" || method_enabled "svo" || method_enabled "verify_all" || method_enabled "random_verify" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior" || method_enabled "svo_only_uncertainty" || method_enabled "svo_only_position" || method_enabled "svo_only_prior"; then
     generate_coco_base_captions
   fi

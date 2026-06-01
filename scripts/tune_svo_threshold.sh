@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-python}"
 CONFIG="configs/default.yaml"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/validation}"
-SAMPLE_SIZE="${SAMPLE_SIZE:-5000}"
+SAMPLE_SIZE="${SAMPLE_SIZE:-2000}"
 SEED="${SEED:-42}"
 ANNOTATIONS="data/coco/annotations/instances_train2017.json"
 CAPTION_ANNOTATIONS="${CAPTION_ANNOTATIONS:-data/coco/annotations/captions_train2017.json}"
@@ -29,7 +29,7 @@ Options:
   --dry-run                 Print commands without executing them.
   --config PATH             Global YAML config. Default: configs/default.yaml
   --output-dir DIR          Validation output root. Default: outputs/validation
-  --sample-size N           Validation split size. Default: 5000
+  --sample-size N           Validation split size. Default: 2000
   --seed N                  Validation split seed. Default: 42
   --annotations PATH        COCO train2017 instances JSON.
   --caption-annotations PATH

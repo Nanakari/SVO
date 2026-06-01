@@ -1,4 +1,4 @@
-"""Create a deterministic COCO image-id split for threshold tuning."""
+"""Create a deterministic COCO image-id split."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument(
         "--output",
-        default="configs/splits/coco_train2017_val5000_seed42.txt",
+        default="configs/splits/coco_sample5000_seed42.txt",
         help="Output split file.",
     )
     parser.add_argument(

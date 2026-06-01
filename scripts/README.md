@@ -24,13 +24,16 @@ Command-line entry points:
 - `prepare_coco_subset.py` for copying/downloading train2017 split images without requiring full train2017.
 - `download_models.sh` for confirmed LLaVA/GroundingDINO asset preparation, including the
   `bert-base-uncased` GroundingDINO text encoder cache by default.
-- `run_all.sh` for dry-run or real end-to-end experiment orchestration. Real SVO/random-verify
-  runs fail fast without a tuned risk threshold. Existing static priors are reused unless
-  `--force-prior` is passed.
-- `tune_svo_threshold.sh` for validation-only SVO risk-threshold tuning on train2017_val5000.
+- `run_all.sh` for dry-run or real end-to-end experiment orchestration. COCO/CHAIR uses a fixed
+  5000-image val2014 main split by default; pass `--full-dataset` for full val2014. Real
+  SVO/random-verify runs fail fast without a tuned risk threshold. Existing static priors are reused
+  unless `--force-prior` is passed.
+- `tune_svo_threshold.sh` for validation-only SVO risk-threshold tuning on train2017_val2000.
   Use `--sweep-only` to reuse completed captions, priors, and objects.
 - `run_coco_main_autodl.sh` for cloud COCO orchestration. It supports `--dry-run`,
   `--tune-only`, and `--main-only`; `--main-only` requires `SVO_RISK_THRESHOLD`.
+- `check_environment.py` for lock-file comparison, `pip check`, CUDA/import diagnostics, and
+  offline `bert-base-uncased` cache validation.
 - `smoke_test.sh` for the no-model toy fixture pipeline.
 - `run_tests.sh` for compile, pytest, and smoke checks.
 - `make_val_split.py` for deterministic COCO train2017 validation splits.

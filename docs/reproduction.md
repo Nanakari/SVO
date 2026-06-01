@@ -1,6 +1,6 @@
 # Reproduction Workflow
 
-This page describes the intended cloud workflow. It generates outputs only from commands you run.
+This page describes the intended reproduction workflow. It generates outputs only from commands you run.
 
 ## 1. Sanity Checks
 
@@ -18,7 +18,7 @@ bash scripts/run_all.sh --dry-run
 bash scripts/prepare_data.sh --download-coco-required --confirm
 bash scripts/prepare_data.sh \
   --prepare-train2017-subset \
-  --subset-size 5000 \
+  --subset-size 2000 \
   --download-missing-subset \
   --confirm
 bash scripts/download_models.sh --confirm --install-groundingdino
@@ -26,6 +26,7 @@ python scripts/check_assets.py \
   --strict \
   --assets llava,groundingdino,groundingdino_text_encoder \
   --datasets coco_chair
+python scripts/check_environment.py --lock requirements-lock-cu121.txt
 ```
 
 This is a COCO-only check. A full strict check will also require POPE and AMBER files. Update
@@ -33,7 +34,7 @@ This is a COCO-only check. A full strict check will also require POPE and AMBER 
 
 ## 3. Tune SVO Threshold on Validation Data
 
-Generate validation captions and static priors on the fixed 5000-image train2017 split, then choose
+Generate validation captions and static priors on the fixed 2000-image train2017 split, then choose
 the SVO threshold from validation metrics only. The repository does not include a hard-coded paper
 threshold.
 
@@ -64,7 +65,7 @@ bash scripts/tune_svo_threshold.sh \
 bash scripts/run_all.sh \
   --config configs/default_autodl.yaml \
   --datasets coco_chair,pope \
-  --methods base,svo,verify_all,random_verify \
+  --methods base,svo \
   --risk-threshold <VAL_THRESHOLD> \
   --gpu 0
 ```
@@ -72,6 +73,8 @@ bash scripts/run_all.sh \
 `run_all.sh` fails before expensive work if SVO/random-verify is requested without a tuned
 threshold. Existing static-prior JSON files are reused automatically; add `--force-prior` to rebuild
 the validation captions and prior.
+COCO/CHAIR main runs use a fixed 5000-image val2014 split by default; pass `--full-dataset`
+only for an intentional full-val2014 run.
 
 Risk-score ablations:
 
@@ -108,8 +111,8 @@ Detector sensitivity analysis:
 
 ```bash
 python scripts/sweep_detector_thresholds.py \
-  --objects outputs/validation/objects/coco_train2017_val5000_svo_objects.jsonl \
-  --base-predictions outputs/validation/predictions/coco_train2017_val5000_base_captions.jsonl \
+  --objects outputs/validation/objects/coco_train2017_val2000_svo_objects.jsonl \
+  --base-predictions outputs/validation/predictions/coco_train2017_val2000_base_captions.jsonl \
   --risk-threshold <VAL_THRESHOLD> \
   --box-thresholds 0.25 0.35 0.45 \
   --text-thresholds 0.20 0.25 0.30 \

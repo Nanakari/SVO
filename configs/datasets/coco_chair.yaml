@@ -9,11 +9,11 @@ paths:
   captions_file: null
 
 validation:
-  image_root: data/coco/train2017_val5000
+  image_root: data/coco/train2017_val2000
   annotation_file: data/coco/annotations/instances_train2017.json
   caption_annotation_file: data/coco/annotations/captions_train2017.json
-  split_file: configs/splits/coco_train2017_val5000_seed42.txt
-  sample_size: 5000
+  split_file: configs/splits/coco_train2017_val2000_seed42.txt
+  sample_size: 2000
   seed: 42
 
 evaluation:

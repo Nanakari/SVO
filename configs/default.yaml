@@ -59,6 +59,6 @@ evaluation:
   tune_on_validation_only: true
   validation_split:
     dataset: coco_train2017
-    sample_size: 5000
+    sample_size: 2000
     seed: 42
-    split_file: configs/splits/coco_train2017_val5000_seed42.txt
+    split_file: configs/splits/coco_train2017_val2000_seed42.txt
