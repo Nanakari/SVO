@@ -46,13 +46,17 @@ class RiskScorer:
         weights_config = risk_config.get("weights", {})
         method_config = config.get("method", {})
         enabled_terms = method_config.get("risk_terms") or config.get("risk_terms") or {}
-        static_prior = StaticObjectPrior.from_config(config, project_root)
+        weights = RiskWeights(
+            uncertainty=float(weights_config.get("uncertainty", 1.0)),
+            position=float(weights_config.get("position", 1.0)),
+            prior=float(weights_config.get("prior", 1.0)),
+        )
+        prior_required = bool(enabled_terms.get("prior", True)) and weights.prior > 0.0
+        static_prior = StaticObjectPrior.from_config(
+            config, project_root, required=prior_required
+        )
         return cls(
-            weights=RiskWeights(
-                uncertainty=float(weights_config.get("uncertainty", 1.0)),
-                position=float(weights_config.get("position", 1.0)),
-                prior=float(weights_config.get("prior", 1.0)),
-            ),
+            weights=weights,
             static_prior=static_prior,
             enabled_terms=enabled_terms,
         )

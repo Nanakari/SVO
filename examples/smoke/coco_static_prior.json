@@ -1,0 +1,24 @@
+{
+  "dataset": "smoke",
+  "generated_total": 3,
+  "hallucinated_total": 0,
+  "mean_prior": 0.0,
+  "min_count": 1,
+  "priors": {
+    "person": {
+      "generated": 1,
+      "hallucinated": 0,
+      "prior": 0.0
+    },
+    "laptop": {
+      "generated": 1,
+      "hallucinated": 0,
+      "prior": 0.0
+    },
+    "bottle": {
+      "generated": 1,
+      "hallucinated": 0,
+      "prior": 0.0
+    }
+  }
+}

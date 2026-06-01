@@ -137,6 +137,8 @@ SVO_RISK_THRESHOLD=<VAL_THRESHOLD> bash scripts/run_coco_main_autodl.sh --main-o
 `run_all.sh` fails fast for real SVO/random-verify runs if neither `--risk-threshold` nor
 `risk_scoring.threshold` is set. Existing static priors are reused automatically; pass
 `--force-prior` only when you intentionally want to rebuild them.
+Direct `extract_objects.py` runs with the prior risk term enabled also require
+`risk_scoring.static_prior_path` to point to an existing prior JSON.
 
 Caption and POPE generation check the first 100 pending image paths before loading LLaVA. Use
 `--check-images all` for full preflight or `--check-images none` to disable the check.

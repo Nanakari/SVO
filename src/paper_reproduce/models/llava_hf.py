@@ -62,7 +62,7 @@ class LlavaHfGenerator:
             raise FileNotFoundError(f"Image not found: {path}")
 
         image = self._image_cls.open(path).convert("RGB")
-        formatted_prompt = _format_llava_prompt(prompt)
+        formatted_prompt = _format_llava_prompt(self.processor, prompt)
 
         start = time.perf_counter()
         inputs = self.processor(text=formatted_prompt, images=image, return_tensors="pt")
@@ -124,10 +124,32 @@ def build_generator(config: Mapping[str, Any]) -> LlavaHfGenerator:
     return LlavaHfGenerator(config)
 
 
-def _format_llava_prompt(prompt: str) -> str:
-    if "<image>" in prompt:
+def _format_llava_prompt(processor: Any, prompt: str) -> str:
+    if _looks_preformatted_prompt(prompt):
         return prompt
+    if hasattr(processor, "apply_chat_template"):
+        prompt_text = prompt.replace("<image>", "").replace("<IMAGE>", "").strip()
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image"},
+                    {"type": "text", "text": prompt_text},
+                ],
+            }
+        ]
+        try:
+            return processor.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=False
+            )
+        except (AttributeError, KeyError, TypeError, ValueError):
+            pass
     return f"USER: <image>\n{prompt}\nASSISTANT:"
+
+
+def _looks_preformatted_prompt(prompt: str) -> bool:
+    normalized = prompt.upper()
+    return "<IMAGE>" in normalized and ("USER:" in normalized or "ASSISTANT:" in normalized)
 
 
 def _resolve_dtype(torch: Any, dtype_name: str, device: str) -> Any:

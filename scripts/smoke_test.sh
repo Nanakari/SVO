@@ -11,6 +11,7 @@ mkdir -p "$OUT_DIR"/{objects,verifications,revisions,metrics,tables}
 
 CAPTIONS="examples/smoke/smoke_captions.jsonl"
 ANNOTATIONS="examples/smoke/coco_instances_smoke.json"
+PRIOR="examples/smoke/coco_static_prior.json"
 OBJECTS="$OUT_DIR/objects/smoke_objects.jsonl"
 VERIFICATIONS="$OUT_DIR/verifications/smoke_svo.jsonl"
 REVISIONS="$OUT_DIR/revisions/smoke_svo_revisions.jsonl"
@@ -22,6 +23,7 @@ echo "[1/7] Extract objects and risk scores"
   --input "$CAPTIONS" \
   --output "$OBJECTS" \
   --backend rule \
+  --set "risk_scoring.static_prior_path=$PRIOR" \
   --overwrite
 
 echo "[2/7] Verify no objects by using a high risk threshold"

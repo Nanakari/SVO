@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from paper_reproduce.extraction import build_extractor
 from paper_reproduce.scoring import RiskScorer
 
@@ -18,7 +20,7 @@ def _config() -> dict:
         "risk_scoring": {
             "static_prior_path": None,
             "fallback_prior": 0.0,
-            "weights": {"uncertainty": 1.0, "position": 1.0, "prior": 1.0},
+            "weights": {"uncertainty": 1.0, "position": 1.0, "prior": 0.0},
         },
     }
 
@@ -52,3 +54,24 @@ def test_risk_scorer_attaches_terms() -> None:
     assert bottle["risk"]["uncertainty"] == 1.4
     assert bottle["risk"]["position"] == 1.0
     assert bottle["risk"]["total"] == 2.4
+
+
+def test_risk_scorer_requires_prior_file_when_prior_term_is_enabled(tmp_path: Path) -> None:
+    config = _config()
+    config["risk_scoring"]["weights"]["prior"] = 1.0
+    config["risk_scoring"]["static_prior_path"] = str(tmp_path / "missing_prior.json")
+
+    with pytest.raises(FileNotFoundError, match="Static prior file not found"):
+        RiskScorer.from_config(config, PROJECT_ROOT)
+
+
+def test_risk_scorer_allows_missing_prior_when_prior_term_is_disabled(tmp_path: Path) -> None:
+    config = _config()
+    config["risk_scoring"]["weights"]["prior"] = 1.0
+    config["risk_scoring"]["static_prior_path"] = str(tmp_path / "missing_prior.json")
+    config["method"] = {"risk_terms": {"uncertainty": True, "position": True, "prior": False}}
+
+    scorer = RiskScorer.from_config(config, PROJECT_ROOT)
+
+    assert scorer.static_prior.values == {}
+    assert scorer.enabled_terms["prior"] is False

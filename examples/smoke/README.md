@@ -6,3 +6,6 @@ experiment and must not be reported as a paper result.
 The caption mentions `person`, `laptop`, and `bottle`; the tiny COCO-style annotation contains
 only `person` and `laptop`. The smoke test uses a high SVO risk threshold so no GroundingDINO query
 is made.
+
+`coco_static_prior.json` is a tiny zero-prior fixture used only to exercise the risk-scoring path
+without requiring a generated COCO prior file.

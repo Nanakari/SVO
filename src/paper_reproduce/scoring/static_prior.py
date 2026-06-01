@@ -25,7 +25,11 @@ class StaticObjectPrior:
 
     @classmethod
     def from_config(
-        cls, config: Mapping[str, Any], project_root: str | Path | None = None
+        cls,
+        config: Mapping[str, Any],
+        project_root: str | Path | None = None,
+        *,
+        required: bool = False,
     ) -> "StaticObjectPrior":
         risk_config = config.get("risk_scoring", {})
         min_count = int(risk_config.get("min_prior_count", 5))
@@ -33,9 +37,21 @@ class StaticObjectPrior:
         fallback_prior = float(fallback_setting) if isinstance(fallback_setting, (int, float)) else 0.0
         prior_path = risk_config.get("static_prior_path")
         if prior_path is None:
+            if required:
+                raise ValueError(
+                    "risk_scoring.static_prior_path is required when the prior risk term is "
+                    "enabled with a positive weight."
+                )
             return cls.empty(fallback_prior=fallback_prior, min_count=min_count)
         resolved = resolve_path(prior_path, project_root or Path.cwd())
         if resolved is None or not resolved.exists():
+            if required:
+                raise FileNotFoundError(
+                    "Static prior file not found while the prior risk term is enabled: "
+                    f"{resolved or prior_path}. Build it with scripts/build_static_prior.py, "
+                    "set risk_scoring.static_prior_path to an existing JSON file, or disable "
+                    "the prior term for this run."
+                )
             return cls.empty(fallback_prior=fallback_prior, min_count=min_count)
         return cls.from_json(resolved, min_count=min_count, fallback_prior=fallback_prior)
 
