@@ -3,10 +3,12 @@
 Command-line entry points:
 
 - `run_caption.py` for Base caption generation. Existing complete outputs are detected before
-  LLaVA is loaded.
+  LLaVA is loaded. `--check-images first100|all|none` controls image-path preflight.
 - `run_pope.py` for POPE inference. Existing complete outputs are detected before LLaVA is loaded.
-  Answers default to the public POPE `official` normalizer.
+  Answers default to the public POPE `official` normalizer, and image preflight uses the same
+  `--check-images` modes.
 - `extract_objects.py` for object phrase extraction and SVO risk scoring.
+  `--target-field target_object` lets POPE use structured targets before NLP fallback.
 - `build_static_prior.py` for COCO validation-set static hallucination priors.
 - `verify_objects.py` for GroundingDINO visual verification.
 - `revise_captions.py` for conservative caption revision.
@@ -22,7 +24,9 @@ Command-line entry points:
 - `prepare_coco_subset.py` for copying/downloading train2017 split images without requiring full train2017.
 - `download_models.sh` for confirmed LLaVA/GroundingDINO asset preparation, including the
   `bert-base-uncased` GroundingDINO text encoder cache by default.
-- `run_all.sh` for dry-run or real end-to-end experiment orchestration.
+- `run_all.sh` for dry-run or real end-to-end experiment orchestration. Real SVO/random-verify
+  runs fail fast without a tuned risk threshold. Existing static priors are reused unless
+  `--force-prior` is passed.
 - `tune_svo_threshold.sh` for validation-only SVO risk-threshold tuning on train2017_val5000.
   Use `--sweep-only` to reuse completed captions, priors, and objects.
 - `run_coco_main_autodl.sh` for cloud COCO orchestration. It supports `--dry-run`,

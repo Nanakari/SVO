@@ -10,6 +10,30 @@ bash scripts/run_all.sh --risk-threshold <VAL_THRESHOLD>
 
 Do not tune this value on test metrics.
 
+`scripts/run_all.sh` now fails fast for real SVO/random-verify runs when no threshold is available.
+Run validation tuning first or set `risk_scoring.threshold` in a copied config.
+
+## A static prior already exists
+
+`scripts/run_all.sh` reuses an existing `STATIC_PRIOR_PATH` by default to avoid rerunning validation
+captions. Rebuild it explicitly when needed:
+
+```bash
+bash scripts/run_all.sh --force-prior --risk-threshold <VAL_THRESHOLD>
+```
+
+## Image files are missing
+
+Caption and POPE generation check pending image paths before loading LLaVA:
+
+```bash
+python scripts/run_caption.py ... --check-images all
+python scripts/run_pope.py ... --check-images all
+```
+
+Use `--check-images none` only when image paths are known to be virtual or handled by a custom
+loader.
+
 ## spaCy model is missing
 
 Use the rule extractor for smoke tests:

@@ -15,6 +15,7 @@ PRIOR_IMAGE_ROOT="${PRIOR_IMAGE_ROOT:-}"
 STATIC_PRIOR_PATH="${STATIC_PRIOR_PATH:-}"
 STATIC_PRIOR_PATH_EXPLICIT=0
 BUILD_PRIOR=1
+FORCE_PRIOR=0
 DRY_RUN=0
 
 usage() {
@@ -36,6 +37,7 @@ Options:
   --prior-image-root DIR    Image root for validation/static-prior captions.
   --static-prior-path PATH  Static prior JSON used during object risk scoring.
   --skip-prior              Do not build the COCO static prior.
+  --force-prior             Rebuild the static prior even if the output file already exists.
   --gpu IDS                 Export CUDA_VISIBLE_DEVICES.
   -h, --help                Show this help.
 
@@ -96,6 +98,10 @@ while [[ $# -gt 0 ]]; do
       BUILD_PRIOR=0
       shift
       ;;
+    --force-prior)
+      FORCE_PRIOR=1
+      shift
+      ;;
     --gpu)
       export CUDA_VISIBLE_DEVICES="$2"
       shift 2
@@ -135,6 +141,17 @@ method_enabled() {
     || { [[ "$1" == svo_only_* ]] && contains_item "$METHODS" "components"; }
 }
 
+requires_risk_threshold() {
+  method_enabled "svo" \
+    || method_enabled "svo_without_uncertainty" \
+    || method_enabled "svo_without_position" \
+    || method_enabled "svo_without_prior" \
+    || method_enabled "svo_only_uncertainty" \
+    || method_enabled "svo_only_position" \
+    || method_enabled "svo_only_prior" \
+    || method_enabled "random_verify"
+}
+
 run_cmd() {
   printf '+'
   printf ' %q' "$@"
@@ -168,11 +185,39 @@ fi
 risk_args=()
 if [[ -n "$RISK_THRESHOLD" ]]; then
   risk_args=(--risk-threshold "$RISK_THRESHOLD")
-elif [[ "$DRY_RUN" -eq 0 ]] && { method_enabled "svo" || method_enabled "svo_without_uncertainty" || method_enabled "svo_without_position" || method_enabled "svo_without_prior" || method_enabled "svo_only_uncertainty" || method_enabled "svo_only_position" || method_enabled "svo_only_prior" || method_enabled "random_verify"; }; then
-  echo "No --risk-threshold supplied; verify_objects.py will use risk_scoring.threshold from $CONFIG." >&2
+elif [[ "$DRY_RUN" -eq 0 ]] && requires_risk_threshold; then
+  configured_threshold="$("$PYTHON" - "$CONFIG" <<'PY'
+import sys
+from pathlib import Path
+
+import yaml
+
+config_path = Path(sys.argv[1])
+with config_path.open("r", encoding="utf-8") as handle:
+    config = yaml.safe_load(handle) or {}
+threshold = (config.get("risk_scoring") or {}).get("threshold")
+print("" if threshold is None else threshold)
+PY
+)"
+  if [[ -z "$configured_threshold" ]]; then
+    cat >&2 <<'MSG'
+ERROR: --risk-threshold is required for real SVO/random-verify runs unless
+risk_scoring.threshold is set in the selected config.
+
+Tune on validation first, then rerun for example:
+  bash scripts/run_all.sh --risk-threshold <VAL_THRESHOLD>
+MSG
+    exit 2
+  fi
+  echo "Using risk_scoring.threshold=$configured_threshold from $CONFIG." >&2
 fi
 
 run_static_prior() {
+  if [[ -f "$STATIC_PRIOR_PATH" && "$FORCE_PRIOR" -eq 0 ]]; then
+    echo "Static prior already exists, skipping: $STATIC_PRIOR_PATH"
+    echo "Use --force-prior to rebuild it."
+    return
+  fi
   local prior_captions="$OUTPUT_DIR/predictions/coco_train2017_val${PRIOR_LIMIT}_base_captions.jsonl"
   local prior_split="${PRIOR_SPLIT_FILE:-configs/splits/coco_train2017_val${PRIOR_LIMIT}_seed42.txt}"
   local prior_image_root="$PRIOR_IMAGE_ROOT"
@@ -363,6 +408,7 @@ run_pope_pipeline() {
       --method configs/methods/svo.yaml \
       --input "$predictions" \
       --text-field question \
+      --target-field target_object \
       --output "$objects" \
       "${static_prior_args[@]}"
     run_cmd "$PYTHON" scripts/verify_objects.py \

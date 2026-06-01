@@ -49,6 +49,7 @@ def load_pope_samples(
             if question is None:
                 raise ValueError(f"POPE record is missing question/text/query: {annotation_path}:{index + 1}")
             label = _normalise_label(_first_present(record, ["answer", "label", "gt_answer", "truth"]))
+            target_object = _target_object(record, str(question))
             local_id = record.get("sample_id") or record.get("question_id") or record.get("id") or index
             sample_id = f"{setting}:{local_id}"
             image_path = _resolve_image_path(image_root, image_ref, image_id)
@@ -60,6 +61,7 @@ def load_pope_samples(
                     question=str(question),
                     label=label,
                     setting=setting,
+                    target_object=target_object,
                     raw=record,
                 )
             )
@@ -86,6 +88,29 @@ def _normalise_label(value: Any) -> str | None:
     if lowered in {"no", "n", "false", "0"}:
         return "no"
     return lowered
+
+
+def _target_object(record: Mapping[str, Any], question: str) -> str | None:
+    structured = _first_present(
+        record,
+        ["target_object", "object", "obj", "category", "category_name", "class", "class_name"],
+    )
+    if structured is not None:
+        value = str(structured).strip()
+        return value or None
+
+    normalized = " ".join(question.strip().rstrip("?.!").split())
+    patterns = [
+        r"(?i)^is there (?:a |an |the |any )?(?P<object>.+?) (?:in|on|at) (?:the |this )?image$",
+        r"(?i)^are there (?:any |some )?(?P<object>.+?) (?:in|on|at) (?:the |this )?image$",
+        r"(?i)^does (?:the |this )?image contain (?:a |an |the |any )?(?P<object>.+?)$",
+    ]
+    for pattern in patterns:
+        match = re.match(pattern, normalized)
+        if match:
+            value = match.group("object").strip()
+            return value or None
+    return None
 
 
 def _image_id_from_ref(image_ref: Any) -> str:

@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from paper_reproduce.datasets import load_pope_samples
+from paper_reproduce.datasets.preflight import check_sample_image_paths
 from paper_reproduce.models.llava_hf import build_generator
 from paper_reproduce.utils.cli import add_common_config_args, load_cli_config, positive_int
 from paper_reproduce.utils.config import resolve_path
@@ -46,6 +47,12 @@ def parse_args() -> argparse.Namespace:
         choices=YES_NO_NORMALIZERS,
         help="Normalize raw model answers before writing JSONL. Default: dataset config or official.",
     )
+    parser.add_argument(
+        "--check-images",
+        choices=["none", "first100", "all"],
+        default="first100",
+        help="Check pending image paths before loading LLaVA. Default: first100.",
+    )
     return parser.parse_args()
 
 
@@ -76,6 +83,7 @@ def main() -> None:
         print("Wrote records: 0")
         print(f"Output: {output_path}")
         return
+    check_sample_image_paths(pending, args.check_images)
 
     generator = build_generator(config)
     prompt_template = str(
@@ -103,6 +111,7 @@ def main() -> None:
             "method": method_name,
             "setting": sample.setting,
             "question": sample.question,
+            "target_object": sample.target_object,
             "prompt": prompt,
             "raw_response": result.text,
             "answer": normalize_yes_no_answer(result.text, mode=answer_normalizer),

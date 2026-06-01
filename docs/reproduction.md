@@ -39,6 +39,7 @@ threshold.
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
+  --config configs/default_autodl.yaml \
   --thresholds "0.5 1.0 1.5 2.0" \
   --gpu 0
 ```
@@ -51,6 +52,7 @@ To reuse completed captions, priors, and extracted objects after an interrupted 
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
+  --config configs/default_autodl.yaml \
   --sweep-only \
   --thresholds "0.5 1.0 1.5 2.0" \
   --gpu 0
@@ -60,16 +62,22 @@ bash scripts/tune_svo_threshold.sh \
 
 ```bash
 bash scripts/run_all.sh \
+  --config configs/default_autodl.yaml \
   --datasets coco_chair,pope \
   --methods base,svo,verify_all,random_verify \
   --risk-threshold <VAL_THRESHOLD> \
   --gpu 0
 ```
 
+`run_all.sh` fails before expensive work if SVO/random-verify is requested without a tuned
+threshold. Existing static-prior JSON files are reused automatically; add `--force-prior` to rebuild
+the validation captions and prior.
+
 Risk-score ablations:
 
 ```bash
 bash scripts/run_all.sh \
+  --config configs/default_autodl.yaml \
   --datasets coco_chair \
   --methods ablations \
   --risk-threshold <VAL_THRESHOLD> \
@@ -80,6 +88,7 @@ Single-component risk analysis:
 
 ```bash
 bash scripts/run_all.sh \
+  --config configs/default_autodl.yaml \
   --datasets coco_chair \
   --methods components \
   --risk-threshold <VAL_THRESHOLD> \
@@ -90,6 +99,7 @@ Threshold sensitivity analysis:
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
+  --config configs/default_autodl.yaml \
   --thresholds "0.5 1.0 1.5 2.0" \
   --gpu 0
 ```

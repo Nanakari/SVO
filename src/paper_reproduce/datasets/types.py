@@ -28,6 +28,7 @@ class PopeSample:
     question: str
     label: str | None
     setting: str
+    target_object: str | None
     raw: dict[str, Any]
 
 

@@ -23,8 +23,9 @@ class LlavaHfGenerator:
             from transformers import AutoProcessor, LlavaForConditionalGeneration
         except ImportError as exc:  # pragma: no cover - depends on optional model deps
             raise RuntimeError(
-                "LLaVA generation requires optional model dependencies. Install them with "
-                "`pip install -e .[models]` and ensure PyTorch matches your CUDA runtime."
+                "LLaVA generation requires the CUDA model stack. Install it with "
+                "`pip install -r requirements-models-cu12.txt` on CUDA 12.1 hosts, then "
+                "`pip install -e . --no-deps` if the project package is not installed."
             ) from exc
 
         self._torch = torch

@@ -22,6 +22,9 @@ bash scripts/run_all.sh --dry-run
 
 The smoke test uses toy fixtures and does not load LLaVA, torch, or GroundingDINO.
 
+`requirements.txt` is for development and tests; it intentionally does not install the CUDA model
+stack. For real LLaVA/GroundingDINO runs, install `requirements-models-cu12.txt` on the GPU host.
+
 ## Model And Data Assets
 
 Prepare only the assets needed for the COCO/CHAIR workflow:
@@ -94,6 +97,7 @@ Tune the SVO risk threshold on the validation-only COCO train2017 subset:
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
+  --config configs/default_autodl.yaml \
   --thresholds "0.5 1.0 1.5 2.0" \
   --gpu 0
 ```
@@ -102,6 +106,7 @@ If captions, priors, and objects already exist, rerun only the threshold sweep:
 
 ```bash
 bash scripts/tune_svo_threshold.sh \
+  --config configs/default_autodl.yaml \
   --sweep-only \
   --thresholds "0.5 1.0 1.5 2.0" \
   --gpu 0
@@ -111,6 +116,7 @@ Run the main COCO/POPE workflow after selecting a validation threshold:
 
 ```bash
 bash scripts/run_all.sh \
+  --config configs/default_autodl.yaml \
   --datasets coco_chair,pope \
   --methods base,svo,verify_all,random_verify \
   --risk-threshold <VAL_THRESHOLD> \
@@ -123,6 +129,13 @@ AutoDL/SeeTaCloud helper:
 bash scripts/run_gpu_setup.sh
 SVO_RISK_THRESHOLD=<VAL_THRESHOLD> bash scripts/run_coco_main_autodl.sh --main-only
 ```
+
+`run_all.sh` fails fast for real SVO/random-verify runs if neither `--risk-threshold` nor
+`risk_scoring.threshold` is set. Existing static priors are reused automatically; pass
+`--force-prior` only when you intentionally want to rebuild them.
+
+Caption and POPE generation check the first 100 pending image paths before loading LLaVA. Use
+`--check-images all` for full preflight or `--check-images none` to disable the check.
 
 ## Evaluation
 

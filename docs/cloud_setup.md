@@ -17,6 +17,10 @@ For real model inference on CUDA 12:
 bash scripts/setup_cloud.sh --env-name SVO --with-models
 ```
 
+`requirements.txt` installs development/test dependencies only. It intentionally excludes the model
+stack so `pip install -r requirements.txt` cannot accidentally install a non-cu121 torch wheel.
+Real GPU runs should use `requirements-models-cu12.txt` or `scripts/run_gpu_setup.sh`.
+
 The model stack is pinned for CUDA 12.1 in `requirements-models-cu12.txt`.
 `requirements-lock-cu121.txt` records the stricter reference stack used on the cloud host.
 
@@ -60,6 +64,8 @@ Before running real experiments, make sure:
 - The GroundingDINO commit printed by `scripts/download_models.sh` is saved in the experiment log.
 - `risk_scoring.threshold` is tuned on validation data or passed with `--risk-threshold`.
 - `outputs/` is empty or intentionally being resumed.
+- `configs/default_autodl.yaml` is used on the prepared cloud layout, or equivalent model path
+  overrides are passed to `configs/default.yaml`.
 
 On AutoDL/SeeTaCloud-style instances, the prepared helper scripts are:
 

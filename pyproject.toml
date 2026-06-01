@@ -31,8 +31,6 @@ models = [
     "accelerate>=0.27.0",
     "opencv-python>=4.8.0",
     "sentencepiece>=0.1.99",
-    "torch==2.4.1",
-    "torchvision==0.19.1",
     "tokenizers==0.22.2",
     "huggingface-hub==0.36.0",
     "transformers==4.57.1",

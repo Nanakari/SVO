@@ -80,6 +80,13 @@ field aliases.
 Generated POPE answers and POPE evaluation default to the public POPE script-style `official`
 answer normalizer. This keeps free-form responses comparable with common POPE reporting.
 
+POPE object verification prefers a structured `target_object` field. If the field is absent, the
+loader parses common question templates such as `Is there a dining table in the image?`; if parsing
+fails, object extraction falls back to the configured NLP/rule extractor.
+
+`run_caption.py` and `run_pope.py` check the first 100 pending image paths before loading LLaVA.
+Use `--check-images all` when validating a newly prepared dataset.
+
 ## AMBER Object Subset
 
 Place object-existence-only AMBER samples at:

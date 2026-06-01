@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from paper_reproduce.datasets import load_coco_caption_samples
+from paper_reproduce.datasets.preflight import check_sample_image_paths
 from paper_reproduce.models.llava_hf import build_generator
 from paper_reproduce.utils.cli import add_common_config_args, load_cli_config, positive_int
 from paper_reproduce.utils.config import resolve_path
@@ -32,6 +33,12 @@ def parse_args() -> argparse.Namespace:
         "--overwrite",
         action="store_true",
         help="Replace the output file instead of resuming from existing sample_ids.",
+    )
+    parser.add_argument(
+        "--check-images",
+        choices=["none", "first100", "all"],
+        default="first100",
+        help="Check pending image paths before loading LLaVA. Default: first100.",
     )
     return parser.parse_args()
 
@@ -58,6 +65,7 @@ def main() -> None:
         print("Wrote records: 0")
         print(f"Output: {output_path}")
         return
+    check_sample_image_paths(pending, args.check_images)
 
     generator = build_generator(config)
     prompt = str(config.get("generation", {}).get("prompt", "Please describe this image in detail."))
